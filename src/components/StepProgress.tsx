@@ -14,8 +14,9 @@ type Props = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CIRCLE_SIZE = 24;
-const LINE_FLEX   = 0.35; // flex weight for connector lines (relative to 1 per step)
+const CIRCLE_SIZE     = 26;
+const LINE_THICKNESS  = 2;
+const LINE_INSET      = CIRCLE_SIZE / 2 + 4; // gap between circle edge and dash
 
 // ─── StepProgress ─────────────────────────────────────────────────────────────
 
@@ -27,86 +28,81 @@ export function StepProgress({ steps, currentStep }: Readonly<Props>) {
 
   return (
     <View style={styles.container}>
-      {/* ── Row 1: circles + connector lines ── */}
-      <View style={styles.circleRow}>
-        {steps.map((_, index) => {
-          const step        = index + 1;
-          const isCompleted = step < currentStep;
-          const isActive    = step === currentStep;
+      {steps.map((label, index) => {
+        const step        = index + 1;
+        const isCompleted = step < currentStep;
+        const isActive    = step === currentStep;
+        const isUpcoming  = !isCompleted && !isActive;
+        const isLast      = index === steps.length - 1;
 
-          const circleBg = isCompleted || isActive
+        // Circle fill: green when done, purple when active, dark otherwise
+        const circleBg = isCompleted
+          ? colors.success.main
+          : isActive
             ? colors.primary.main
             : colors.background.elevated;
 
-          const lineColor = step < currentStep
-            ? colors.primary.main
-            : colors.border;
+        // Label colour follows the same green / purple / gray logic
+        const labelColor = isCompleted
+          ? colors.success.main
+          : isActive
+            ? colors.primary.light
+            : colors.text.secondary;
 
-          return (
-            <React.Fragment key={index}>
-              {/* Circle */}
-              <View style={styles.circleCell}>
-                <View style={[styles.circle, { backgroundColor: circleBg }]}>
-                  {isCompleted ? (
-                    <Icon name="check" size={13} color={colors.white} />
-                  ) : (
-                    <Text style={[
-                      styles.circleNum,
-                      { color: isActive ? colors.white : colors.text.secondary },
-                    ]}>
-                      {step}
-                    </Text>
-                  )}
-                </View>
-              </View>
+        return (
+          <View key={index} style={styles.cell}>
+            {/* Connector dash — spans from this circle's centre to the next.
+                Absolutely positioned so circles stay evenly distributed. */}
+            {!isLast && (
+              <View
+                style={[
+                  styles.line,
+                  { backgroundColor: colors.border },
+                ]}
+              />
+            )}
 
-              {/* Connector line (not after last step) */}
-              {index < steps.length - 1 && (
-                <View
-                  style={[
-                    styles.line,
-                    { flex: LINE_FLEX, backgroundColor: lineColor },
-                  ]}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </View>
-
-      {/* ── Row 2: labels — spacers mirror the line flex so labels stay under circles ── */}
-      <View style={styles.labelRow}>
-        {steps.map((label, index) => {
-          const step     = index + 1;
-          const isActive = step === currentStep;
-
-          return (
-            <React.Fragment key={index}>
-              <View style={styles.circleCell}>
+            {/* Circle */}
+            <View
+              style={[
+                styles.circle,
+                { backgroundColor: circleBg },
+                isUpcoming && styles.circleUpcoming,
+                isUpcoming && { borderColor: colors.border },
+                isActive   && styles.circleActiveGlow,
+                isActive   && { shadowColor: colors.primary.main },
+              ]}
+            >
+              {isCompleted ? (
+                <Icon name="check" size={14} color={colors.white} />
+              ) : (
                 <Text
                   style={[
-                    styles.label,
-                    {
-                      color: isActive
-                        ? colors.primary.light
-                        : colors.text.secondary,
-                      fontWeight: isActive
-                        ? typo.fontWeight.semiBold
-                        : typo.fontWeight.regular,
-                    },
+                    styles.circleNum,
+                    { color: isActive ? colors.white : colors.text.secondary },
                   ]}
-                  numberOfLines={2}
                 >
-                  {label}
+                  {step}
                 </Text>
-              </View>
-              {index < steps.length - 1 && (
-                <View style={{ flex: LINE_FLEX }} />
               )}
-            </React.Fragment>
-          );
-        })}
-      </View>
+            </View>
+
+            {/* Label */}
+            <Text
+              style={[
+                styles.label,
+                {
+                  color:      labelColor,
+                  fontWeight: isActive ? typo.fontWeight.semiBold : typo.fontWeight.medium,
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -116,20 +112,35 @@ export function StepProgress({ steps, currentStep }: Readonly<Props>) {
 function makeStyles(sp: ReturnType<typeof useSpacing>) {
   return StyleSheet.create({
     container: {
-      paddingHorizontal: sp.screenHorizontal,
-      paddingVertical:   sp.sm,
+      flexDirection:     'row',
+      alignItems:        'flex-start',
+      // Slightly tighter than screen padding so the 6 labels have room to sit
+      // on a single line (matches the design).
+      paddingHorizontal: sp.md,
+      paddingTop:        sp.sm,
+      paddingBottom:     sp.sm,
     },
 
-    // Row 1
-    circleRow: {
-      flexDirection: 'row',
-      alignItems:    'center',
-      marginBottom:  sp.xxs,
-    },
-    circleCell: {
+    // Each step occupies an equal share of the width → circles are evenly spaced
+    cell: {
       flex:       1,
       alignItems: 'center',
+      position:   'relative',
     },
+
+    // Connector runs from this cell's centre (50%) to the next cell's centre
+    // (-50%), inset on both ends so it sits cleanly between the two circles.
+    line: {
+      position:    'absolute',
+      top:         (CIRCLE_SIZE - LINE_THICKNESS) / 2,
+      left:        '50%',
+      right:       '-50%',
+      height:      LINE_THICKNESS,
+      marginLeft:  LINE_INSET,
+      marginRight: LINE_INSET,
+      borderRadius: LINE_THICKNESS / 2,
+    },
+
     circle: {
       width:          CIRCLE_SIZE,
       height:         CIRCLE_SIZE,
@@ -137,24 +148,25 @@ function makeStyles(sp: ReturnType<typeof useSpacing>) {
       alignItems:     'center',
       justifyContent: 'center',
     },
-    circleNum: {
-      fontSize:   10,
-      fontWeight: '600',
-      lineHeight: 12,
+    circleUpcoming: {
+      borderWidth: 1,
     },
-    line: {
-      height:       1.5,
-      alignSelf:    'center',
+    circleActiveGlow: {
+      shadowOffset:  { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius:  6,
+      elevation:     6,
+    },
+    circleNum: {
+      fontSize:   12,
+      fontWeight: '700',
     },
 
-    // Row 2
-    labelRow: {
-      flexDirection: 'row',
-    },
     label: {
-      fontSize:  9,
-      textAlign: 'center',
-      lineHeight: 12,
+      marginTop:  6,
+      fontSize:   10,
+      textAlign:  'center',
+      letterSpacing: 0.1,
     },
   });
 }

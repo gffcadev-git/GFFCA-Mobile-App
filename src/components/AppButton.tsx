@@ -15,7 +15,10 @@ type Props = TouchableOpacityProps & {
   title: string;
   variant?: Variant;
   loading?: boolean;
+  /** Icon rendered before the label */
   icon?: React.ReactNode;
+  /** Icon rendered after the label */
+  iconRight?: React.ReactNode;
 };
 
 export function AppButton({
@@ -23,6 +26,7 @@ export function AppButton({
   variant = 'primary',
   loading = false,
   icon,
+  iconRight,
   disabled,
   style,
   ...rest
@@ -59,6 +63,7 @@ export function AppButton({
         <View style={styles.inner}>
           {icon && <View style={styles.icon}>{icon}</View>}
           <Text style={[styles.label, { color: textColor }]}>{title}</Text>
+          {iconRight && <View style={styles.iconRight}>{iconRight}</View>}
         </View>
       )}
     </TouchableOpacity>
@@ -77,8 +82,9 @@ function makeStyles(
       justifyContent:    'center',
       paddingHorizontal: sp.headerHorizontal,
     },
-    inner: { flexDirection: 'row', alignItems: 'center' },
-    icon:  { marginRight: sp.xs },
+    inner:     { flexDirection: 'row', alignItems: 'center' },
+    icon:      { marginRight: sp.xs },
+    iconRight: { marginLeft: sp.xs },
     label: {
       fontSize:      typo.fontSize.lg,
       fontWeight:    typo.fontWeight.semiBold,

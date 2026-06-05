@@ -4,9 +4,18 @@ import { createBottomTabNavigator }       from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator }     from '@react-navigation/native-stack';
 import { MainTabParamList, MainStackParamList } from './types';
 import { DashboardScreen }                from '../screens/main/DashboardScreen';
+import { MessagesScreen }                 from '../screens/main/MessagesScreen';
+import { MessageThreadScreen }            from '../screens/main/MessageThreadScreen';
+import { ProfileScreen }                  from '../screens/main/ProfileScreen';
 import { NewShippingStep1Screen }         from '../screens/main/NewShippingStep1Screen';
 import { NewShippingStep2Screen }         from '../screens/main/NewShippingStep2Screen';
 import { NewShippingStep3Screen }         from '../screens/main/NewShippingStep3Screen';
+import { NewShippingStep4Screen }         from '../screens/main/NewShippingStep4Screen';
+import { NewShippingCargoVehiclesScreen } from '../screens/main/NewShippingCargoVehiclesScreen';
+import { NewShippingVinResultsScreen }    from '../screens/main/NewShippingVinResultsScreen';
+import { NewShippingStep5Screen }         from '../screens/main/NewShippingStep5Screen';
+import { NewShippingStep6Screen }         from '../screens/main/NewShippingStep6Screen';
+import { NewShippingSuccessScreen }       from '../screens/main/NewShippingSuccessScreen';
 import { useColors }                      from '../theme';
 
 // ─── Tab navigator ────────────────────────────────────────────────────────────
@@ -27,8 +36,6 @@ const styles = StyleSheet.create({
 });
 
 function ShipmentsScreen() { return <PlaceholderScreen name="Shipments" />; }
-function MessagesScreen()  { return <PlaceholderScreen name="Messages" />; }
-function ProfileScreen()   { return <PlaceholderScreen name="Profile" />; }
 
 function TabNavigator() {
   return (
@@ -56,6 +63,13 @@ export function MainNavigator() {
       <MainStack.Screen name="NewShippingStep1" component={NewShippingStep1Screen} />
       <MainStack.Screen name="NewShippingStep2" component={NewShippingStep2Screen} />
       <MainStack.Screen name="NewShippingStep3" component={NewShippingStep3Screen} />
+      <MainStack.Screen name="NewShippingStep4" component={NewShippingStep4Screen} />
+      <MainStack.Screen name="NewShippingCargoVehicles" component={NewShippingCargoVehiclesScreen} />
+      <MainStack.Screen name="NewShippingVinResults"    component={NewShippingVinResultsScreen} />
+      <MainStack.Screen name="NewShippingStep5" component={NewShippingStep5Screen} />
+      <MainStack.Screen name="NewShippingStep6" component={NewShippingStep6Screen} />
+      <MainStack.Screen name="NewShippingSuccess" component={NewShippingSuccessScreen} />
+      <MainStack.Screen name="MessageThread" component={MessageThreadScreen} />
     </MainStack.Navigator>
   );
 }

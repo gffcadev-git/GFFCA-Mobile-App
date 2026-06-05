@@ -15,6 +15,8 @@ import { AppInput }                   from '../../components/AppInput';
 import { AppButton }                  from '../../components/AppButton';
 import { StepProgress }               from '../../components/StepProgress';
 import { SaveDraftButton }            from '../../components/SaveDraftButton';
+import { InfoBanner }                 from '../../components/InfoBanner';
+import { WizardFooter }               from '../../components/WizardFooter';
 import { Icon }                       from '../../components/Icon';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -66,12 +68,9 @@ export function NewShippingStep1Screen({ navigation }: Readonly<NewShippingStep1
         showsVerticalScrollIndicator={false}
       >
         {/* Info banner */}
-        <View style={[styles.infoBanner, { backgroundColor: colors.background.elevated, borderColor: colors.border }]}>
-          <Icon name="information-outline" size={18} color={colors.info.main} />
-          <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            Enter your booking number — we'll auto-fill the carrier from it. No booking yet? Leave it blank and the docs team can link one for you.
-          </Text>
-        </View>
+        <InfoBanner>
+          Enter your booking number — we'll auto-fill the carrier from it. No booking yet? Leave it blank and the docs team can link one for you.
+        </InfoBanner>
 
         {/* Booking number */}
         <AppInput
@@ -118,13 +117,14 @@ export function NewShippingStep1Screen({ navigation }: Readonly<NewShippingStep1
       </ScrollView>
 
       {/* Fixed bottom — Next button */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + sp.sm, backgroundColor: colors.background.default }]}>
+      <WizardFooter>
         <AppButton
           title="Next →"
           onPress={handleNext}
           disabled={!destination.trim()}
+          style={styles.fullBtn}
         />
-      </View>
+      </WizardFooter>
     </KeyboardAvoidingView>
   );
 }
@@ -136,23 +136,9 @@ function makeStyles(
   typo: ReturnType<typeof useTypography>,
 ) {
   return StyleSheet.create({
-    root:   { flex: 1 },
-    scroll: { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.md },
-
-    infoBanner: {
-      flexDirection:  'row',
-      alignItems:     'flex-start',
-      gap:            sp.xs,
-      borderWidth:    1,
-      borderRadius:   typo.borderRadius.md,
-      padding:        sp.sm,
-      marginBottom:   sp.lg,
-    },
-    infoText: {
-      flex:       1,
-      fontSize:   typo.fontSize.sm,
-      lineHeight: typo.lineHeight.normal,
-    },
+    root:    { flex: 1 },
+    scroll:  { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.md },
+    fullBtn: { flex: 1 },
 
     carrierCard: {
       flexDirection:    'row',
@@ -191,15 +177,6 @@ function makeStyles(
     linkedText: {
       fontSize:   typo.fontSize.xs,
       fontWeight: typo.fontWeight.semiBold,
-    },
-
-    footer: {
-      position:          'absolute',
-      bottom:            0,
-      left:              0,
-      right:             0,
-      paddingHorizontal: sp.screenHorizontal,
-      paddingTop:        sp.sm,
     },
   });
 }

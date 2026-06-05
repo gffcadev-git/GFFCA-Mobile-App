@@ -29,15 +29,29 @@ export type DashboardTabProps = BottomTabScreenProps<MainTabParamList, 'Dashboar
 // ─── Main stack (wraps tabs + full-screen flows) ──────────────────────────────
 
 export type MainStackParamList = {
-  Tabs:             undefined;
-  NewShippingStep1: undefined;
-  NewShippingStep2: undefined;
-  NewShippingStep3: undefined;
+  Tabs:                 undefined;
+  NewShippingStep1:     undefined;
+  NewShippingStep2:     undefined;
+  NewShippingStep3:     undefined;
+  NewShippingStep4:     undefined;
+  NewShippingCargoVehicles: undefined;
+  NewShippingVinResults:    undefined;
+  NewShippingStep5:     undefined;
+  NewShippingStep6:     undefined;
+  NewShippingSuccess:   undefined;
+  MessageThread:        { ref: string; subtitle: string };
 };
 
 export type NewShippingStep1Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep1'>;
 export type NewShippingStep2Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep2'>;
 export type NewShippingStep3Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep3'>;
+export type NewShippingStep4Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep4'>;
+export type NewShippingCargoVehiclesProps = NativeStackScreenProps<MainStackParamList, 'NewShippingCargoVehicles'>;
+export type NewShippingVinResultsProps    = NativeStackScreenProps<MainStackParamList, 'NewShippingVinResults'>;
+export type NewShippingStep5Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep5'>;
+export type NewShippingStep6Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep6'>;
+export type NewShippingSuccessProps = NativeStackScreenProps<MainStackParamList, 'NewShippingSuccess'>;
+export type MessageThreadProps      = NativeStackScreenProps<MainStackParamList, 'MessageThread'>;
 
 // ─── Root navigator ───────────────────────────────────────────────────────────
 
