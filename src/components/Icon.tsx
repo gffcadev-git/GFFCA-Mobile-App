@@ -35,6 +35,13 @@ export type IconName =
   | 'file-document-outline'
   | 'circle-outline'
   | 'cog-outline'
+  | 'alert-outline'
+  | 'refresh'
+  | 'map-marker-outline'
+  | 'translate'
+  | 'calendar-outline'
+  | 'clock-outline'
+  | 'check-decagram'
   // Cargo types
   | 'car'
   | 'car-multiple'

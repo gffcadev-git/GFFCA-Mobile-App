@@ -16,15 +16,18 @@ type Props = {
   onBack?: () => void;
   /** Optional element rendered on the right side */
   rightElement?: React.ReactNode;
+  /** Title/subtitle alignment — defaults to 'center' */
+  titleAlign?: 'center' | 'left';
 };
 
-export function ScreenHeader({ title, subtitle, onBack, rightElement }: Readonly<Props>) {
+export function ScreenHeader({ title, subtitle, onBack, rightElement, titleAlign = 'center' }: Readonly<Props>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const styles = makeStyles(sp, typo);
+  const styles  = makeStyles(sp, typo);
+  const isLeft  = titleAlign === 'left';
 
   return (
     <View
@@ -47,12 +50,12 @@ export function ScreenHeader({ title, subtitle, onBack, rightElement }: Readonly
       </View>
 
       {/* Center — title + optional subtitle */}
-      <View style={styles.center}>
-        <Text style={[styles.title, { color: colors.text.primary }]} numberOfLines={1}>
+      <View style={[styles.center, isLeft && styles.centerLeft]}>
+        <Text style={[styles.title, isLeft && styles.titleLeft, { color: colors.text.primary }]} numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.text.secondary }]} numberOfLines={1}>
+          <Text style={[styles.subtitle, isLeft && styles.titleLeft, { color: colors.text.secondary }]} numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}
@@ -87,6 +90,10 @@ function makeStyles(
       flex:           1,
       alignItems:     'center',
     },
+    centerLeft: {
+      alignItems: 'flex-start',
+      paddingLeft: sp.xs,
+    },
     rightSide: {
       minWidth:       sp.headerSide,
       alignItems:     'flex-end',
@@ -99,6 +106,7 @@ function makeStyles(
       fontWeight:    typo.fontWeight.semiBold,
       letterSpacing: typo.letterSpacing.tight,
     },
+    titleLeft: { textAlign: 'left' },
     subtitle: {
       textAlign:  'center',
       fontSize:   typo.fontSize.sm,

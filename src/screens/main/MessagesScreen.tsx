@@ -11,8 +11,8 @@ import { useNavigation }                  from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, useSpacing, useTypography } from '../../theme';
 import type { MainStackParamList }        from '../../navigation/types';
-import { Icon }                           from '../../components/Icon';
 import { Avatar }                         from '../../components/Avatar';
+import { TabHeader }                      from '../../components/TabHeader';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -94,17 +94,11 @@ export function MessagesScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + sp.xs }]}>
-        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Messages</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7}>
-            <Icon name="bell-outline" size={24} color={colors.text.primary} />
-            <View style={[styles.bellDot, { backgroundColor: colors.error.main, borderColor: colors.background.default }]} />
-          </TouchableOpacity>
-          <Avatar initials="AE" size={36} />
-        </View>
-      </View>
+      <TabHeader
+        title="Messages"
+        avatarInitials="AE"
+        onBellPress={() => navigation.navigate('Notifications')}
+      />
 
       <ScrollView
         contentContainerStyle={[
@@ -169,26 +163,6 @@ function makeStyles(
 ) {
   return StyleSheet.create({
     root: { flex: 1 },
-
-    header: {
-      flexDirection:     'row',
-      alignItems:        'center',
-      justifyContent:    'space-between',
-      paddingHorizontal: sp.screenHorizontal,
-      paddingBottom:     sp.sm,
-    },
-    headerTitle: { fontSize: typo.fontSize.xxl, fontWeight: typo.fontWeight.bold },
-    headerRight: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
-    bellBtn:     { padding: sp.xxs },
-    bellDot: {
-      position:     'absolute',
-      top:          4,
-      right:        4,
-      width:        9,
-      height:       9,
-      borderRadius: 5,
-      borderWidth:  1.5,
-    },
 
     scroll: { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.xs },
 

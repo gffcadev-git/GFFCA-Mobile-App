@@ -40,6 +40,12 @@ export type MainStackParamList = {
   NewShippingStep6:     undefined;
   NewShippingSuccess:   undefined;
   MessageThread:        { ref: string; subtitle: string };
+  Notifications:        undefined;
+  CompanyDetails:       undefined;
+  SavedParties:         undefined;
+  TaxCompliance:        undefined;
+  Preferences:          undefined;
+  DraftShippingInstructions: undefined;
 };
 
 export type NewShippingStep1Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep1'>;
@@ -52,6 +58,12 @@ export type NewShippingStep5Props = NativeStackScreenProps<MainStackParamList, '
 export type NewShippingStep6Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep6'>;
 export type NewShippingSuccessProps = NativeStackScreenProps<MainStackParamList, 'NewShippingSuccess'>;
 export type MessageThreadProps      = NativeStackScreenProps<MainStackParamList, 'MessageThread'>;
+export type NotificationsProps      = NativeStackScreenProps<MainStackParamList, 'Notifications'>;
+export type CompanyDetailsProps     = NativeStackScreenProps<MainStackParamList, 'CompanyDetails'>;
+export type SavedPartiesProps       = NativeStackScreenProps<MainStackParamList, 'SavedParties'>;
+export type TaxComplianceProps      = NativeStackScreenProps<MainStackParamList, 'TaxCompliance'>;
+export type PreferencesProps        = NativeStackScreenProps<MainStackParamList, 'Preferences'>;
+export type DraftShippingInstructionsProps = NativeStackScreenProps<MainStackParamList, 'DraftShippingInstructions'>;
 
 // ─── Root navigator ───────────────────────────────────────────────────────────
 

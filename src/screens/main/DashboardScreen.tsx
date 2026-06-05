@@ -7,7 +7,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
+import { useNavigation }            from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, useSpacing, useTypography } from '../../theme';
+import type { MainStackParamList }  from '../../navigation/types';
 import { Icon }                     from '../../components/Icon';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 
@@ -83,12 +86,15 @@ function ProjectRow({ id, name, status, lastUpdate }: Readonly<{
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+type Nav = NativeStackNavigationProp<MainStackParamList>;
+
 export function DashboardScreen() {
-  const colors = useColors();
-  const sp     = useSpacing();
-  const typo   = useTypography();
-  const insets = useSafeAreaInsets();
-  const styles = makeDashboardStyles(sp, typo);
+  const colors     = useColors();
+  const sp         = useSpacing();
+  const typo       = useTypography();
+  const insets     = useSafeAreaInsets();
+  const navigation = useNavigation<Nav>();
+  const styles     = makeDashboardStyles(sp, typo);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
@@ -96,7 +102,7 @@ export function DashboardScreen() {
       <View style={[styles.header, { paddingTop: insets.top + sp.xs }]}>
         <Text style={[styles.headerAppName, { color: colors.text.primary }]}>GFF Portal</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.bellBtn}>
+          <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
             <Icon name="bell-outline" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <View style={[styles.avatar, { backgroundColor: colors.primary.main }]}>

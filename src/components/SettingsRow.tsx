@@ -6,6 +6,12 @@ import { Icon, IconName } from './Icon';
 type Props = Readonly<{
   icon:   IconName;
   label:  string;
+  /** Secondary line under the label */
+  sublabel?: string;
+  /** Right-aligned value text shown before the chevron */
+  value?: string;
+  /** Wrap the leading icon in a subtle elevated tile */
+  iconTile?: boolean;
   onPress?: () => void;
   /** When provided the row shows a Switch instead of a chevron */
   toggle?: { value: boolean; onValueChange: (v: boolean) => void };
@@ -14,21 +20,37 @@ type Props = Readonly<{
 }>;
 
 /**
- * A single row inside a grouped settings/profile list: leading icon, label
- * and a trailing chevron (navigation) or Switch (toggle). Rows render a
- * bottom hairline divider unless `isLast`.
+ * A single row inside a grouped settings/profile list: leading icon, a
+ * label (with optional sublabel) and a trailing value + chevron (navigation)
+ * or Switch (toggle). Rows render a bottom hairline divider unless `isLast`.
  */
-export function SettingsRow({ icon, label, onPress, toggle, isLast }: Props) {
+export function SettingsRow({
+  icon, label, sublabel, value, iconTile, onPress, toggle, isLast,
+}: Props) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
   const styles = makeStyles(sp, typo);
 
+  const glyph = <Icon name={icon} size={20} color={colors.text.secondary} />;
+
   const content = (
     <>
-      <Icon name={icon} size={20} color={colors.text.secondary} />
-      <Text style={[styles.label, { color: colors.text.primary }]}>{label}</Text>
-      <View style={styles.spacer} />
+      {iconTile ? (
+        <View style={[styles.tile, { backgroundColor: colors.background.elevated }]}>{glyph}</View>
+      ) : (
+        glyph
+      )}
+
+      <View style={styles.labelCol}>
+        <Text style={[styles.label, { color: colors.text.primary }]}>{label}</Text>
+        {!!sublabel && (
+          <Text style={[styles.sublabel, { color: colors.text.secondary }]}>{sublabel}</Text>
+        )}
+      </View>
+
+      {!!value && <Text style={[styles.value, { color: colors.text.secondary }]}>{value}</Text>}
+
       {toggle ? (
         <Switch
           value={toggle.value}
@@ -72,7 +94,16 @@ function makeStyles(
       paddingHorizontal: sp.md,
       paddingVertical:   sp.md,
     },
-    label:  { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.medium },
-    spacer: { flex: 1 },
+    tile: {
+      width:          34,
+      height:         34,
+      borderRadius:   typo.borderRadius.sm,
+      alignItems:     'center',
+      justifyContent: 'center',
+    },
+    labelCol: { flex: 1 },
+    label:    { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
+    sublabel: { fontSize: typo.fontSize.xs, marginTop: 1 },
+    value:    { fontSize: typo.fontSize.sm },
   });
 }

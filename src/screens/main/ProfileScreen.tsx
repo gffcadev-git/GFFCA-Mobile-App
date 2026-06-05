@@ -7,36 +7,36 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets }              from 'react-native-safe-area-context';
+import { useNavigation }                  from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, useSpacing, useTypography } from '../../theme';
-import { Icon }                           from '../../components/Icon';
+import type { MainStackParamList }        from '../../navigation/types';
 import { Avatar }                         from '../../components/Avatar';
 import { SettingsRow }                    from '../../components/SettingsRow';
+import { TabHeader }                      from '../../components/TabHeader';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+type Nav = NativeStackNavigationProp<MainStackParamList>;
+
 export function ProfileScreen() {
-  const colors = useColors();
-  const sp     = useSpacing();
-  const typo   = useTypography();
-  const insets = useSafeAreaInsets();
-  const styles = makeStyles(sp, typo);
+  const colors     = useColors();
+  const sp         = useSpacing();
+  const typo       = useTypography();
+  const insets     = useSafeAreaInsets();
+  const navigation = useNavigation<Nav>();
+  const styles     = makeStyles(sp, typo);
 
   const [biometric, setBiometric] = useState(true);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + sp.xs }]}>
-        <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Company profile</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7}>
-            <Icon name="bell-outline" size={24} color={colors.text.primary} />
-            <View style={[styles.bellDot, { backgroundColor: colors.error.main, borderColor: colors.background.default }]} />
-          </TouchableOpacity>
-          <Avatar initials="AE" size={36} />
-        </View>
-      </View>
+      <TabHeader
+        title="Company profile"
+        avatarInitials="AE"
+        onBellPress={() => navigation.navigate('Notifications')}
+      />
 
       <ScrollView
         contentContainerStyle={[
@@ -57,9 +57,9 @@ export function ProfileScreen() {
         {/* Company profile group */}
         <Text style={[styles.sectionHeading, { color: colors.text.secondary }]}>COMPANY PROFILE</Text>
         <View style={[styles.group, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
-          <SettingsRow icon="office-building-outline" label="Company details" onPress={() => {}} />
-          <SettingsRow icon="office-building-outline" label="Saved parties (3)" onPress={() => {}} />
-          <SettingsRow icon="file-document-outline"  label="Tax & compliance IDs" onPress={() => {}} isLast />
+          <SettingsRow icon="office-building-outline" label="Company details" onPress={() => navigation.navigate('CompanyDetails')} />
+          <SettingsRow icon="office-building-outline" label="Saved parties (3)" onPress={() => navigation.navigate('SavedParties')} />
+          <SettingsRow icon="file-document-outline"  label="Tax & compliance IDs" onPress={() => navigation.navigate('TaxCompliance')} isLast />
         </View>
 
         {/* Settings group */}
@@ -71,7 +71,7 @@ export function ProfileScreen() {
             label="Biometric sign-in"
             toggle={{ value: biometric, onValueChange: setBiometric }}
           />
-          <SettingsRow icon="cog-outline" label="Preferences" onPress={() => {}} isLast />
+          <SettingsRow icon="cog-outline" label="Preferences" onPress={() => navigation.navigate('Preferences')} isLast />
         </View>
 
         {/* Sign out */}
@@ -93,26 +93,6 @@ function makeStyles(
 ) {
   return StyleSheet.create({
     root: { flex: 1 },
-
-    header: {
-      flexDirection:     'row',
-      alignItems:        'center',
-      justifyContent:    'space-between',
-      paddingHorizontal: sp.screenHorizontal,
-      paddingBottom:     sp.sm,
-    },
-    headerTitle: { fontSize: typo.fontSize.xxl, fontWeight: typo.fontWeight.bold },
-    headerRight: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
-    bellBtn:     { padding: sp.xxs },
-    bellDot: {
-      position:     'absolute',
-      top:          4,
-      right:        4,
-      width:        9,
-      height:       9,
-      borderRadius: 5,
-      borderWidth:  1.5,
-    },
 
     scroll: { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.xs },
 
