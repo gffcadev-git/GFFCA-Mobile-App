@@ -46,6 +46,7 @@ export type MainStackParamList = {
   TaxCompliance:        undefined;
   Preferences:          undefined;
   DraftShippingInstructions: undefined;
+  ShipmentDetail:       { ref: string };
 };
 
 export type NewShippingStep1Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep1'>;
@@ -64,6 +65,7 @@ export type SavedPartiesProps       = NativeStackScreenProps<MainStackParamList,
 export type TaxComplianceProps      = NativeStackScreenProps<MainStackParamList, 'TaxCompliance'>;
 export type PreferencesProps        = NativeStackScreenProps<MainStackParamList, 'Preferences'>;
 export type DraftShippingInstructionsProps = NativeStackScreenProps<MainStackParamList, 'DraftShippingInstructions'>;
+export type ShipmentDetailProps     = NativeStackScreenProps<MainStackParamList, 'ShipmentDetail'>;
 
 // ─── Root navigator ───────────────────────────────────────────────────────────
 

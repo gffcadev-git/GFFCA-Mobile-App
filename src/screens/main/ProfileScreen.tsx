@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { Avatar }                         from '../../components/Avatar';
 import { SettingsRow }                    from '../../components/SettingsRow';
 import { TabHeader }                      from '../../components/TabHeader';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
+import { useBiometrics }                  from '../../services/biometrics';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -28,7 +30,32 @@ export function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const styles     = makeStyles(sp, typo);
 
-  const [biometric, setBiometric] = useState(true);
+  const { methods, authenticate } = useBiometrics();
+
+  // One enabled-state per biometric method shown on this platform.
+  const [fingerprintOn, setFingerprintOn] = useState(false);
+  const [faceIdOn,      setFaceIdOn]       = useState(false);
+
+  const methodState: Record<'fingerprint' | 'faceid', { value: boolean; set: (v: boolean) => void }> = {
+    fingerprint: { value: fingerprintOn, set: setFingerprintOn },
+    faceid:      { value: faceIdOn,      set: setFaceIdOn },
+  };
+
+  // Enabling requires a successful biometric scan; disabling is immediate.
+  async function toggleBiometric(method: 'fingerprint' | 'faceid', next: boolean) {
+    const { set } = methodState[method];
+    if (!next) {
+      set(false);
+      return;
+    }
+    const label = method === 'faceid' ? 'Face ID' : 'fingerprint';
+    const ok = await authenticate(`Confirm ${label} to enable biometric sign-in`);
+    if (ok) {
+      set(true);
+    } else {
+      Alert.alert('Could not enable', `${label} verification was not completed.`);
+    }
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
@@ -66,11 +93,20 @@ export function ProfileScreen() {
         <Text style={[styles.sectionHeading, { color: colors.text.secondary }]}>SETTINGS</Text>
         <View style={[styles.group, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
           <SettingsRow icon="bell-outline" label="Notifications" onPress={() => {}} />
-          <SettingsRow
-            icon="fingerprint"
-            label="Biometric sign-in"
-            toggle={{ value: biometric, onValueChange: setBiometric }}
-          />
+
+          {/* Biometric sign-in — iOS: Face ID only · Android: Biometric + Face ID */}
+          {methods.map(method => (
+            <SettingsRow
+              key={method}
+              icon={method === 'faceid' ? 'face-recognition' : 'fingerprint'}
+              label={method === 'faceid' ? 'Face ID' : 'Biometric'}
+              toggle={{
+                value:         methodState[method].value,
+                onValueChange: next => toggleBiometric(method, next),
+              }}
+            />
+          ))}
+
           <SettingsRow icon="cog-outline" label="Preferences" onPress={() => navigation.navigate('Preferences')} isLast />
         </View>
 

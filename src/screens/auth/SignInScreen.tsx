@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +15,7 @@ import { useColors, useSpacing, useTypography } from '../../theme';
 import { AppInput }           from '../../components/AppInput';
 import { AppButton }          from '../../components/AppButton';
 import { Icon }               from '../../components/Icon';
+import { useBiometrics, BiometricMethod } from '../../services/biometrics';
 
 export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const colors = useColors();
@@ -25,10 +27,23 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
 
+  const { methods, authenticate } = useBiometrics();
+
   function handleSignIn() {
     setLoading(true);
     // TODO: wire up auth API
     setTimeout(() => setLoading(false), 1500);
+  }
+
+  async function handleBiometric(method: BiometricMethod) {
+    const label = method === 'faceid' ? 'Face ID' : 'fingerprint';
+    const ok = await authenticate(`Sign in with ${label}`);
+    if (ok) {
+      // TODO: exchange the biometric result for a session token, then route
+      handleSignIn();
+    } else {
+      Alert.alert('Authentication failed', `Could not verify ${label}. Please try again or use your password.`);
+    }
   }
 
   const styles = makeStyles(sp, typo);
@@ -90,23 +105,26 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
           <View style={[styles.line, { backgroundColor: colors.divider }]} />
         </View>
 
-        {/* Biometric buttons */}
+        {/* Biometric buttons — iOS shows Face ID only, Android shows both */}
         <View style={styles.biometricRow}>
-          <AppButton
-            title="Fingerprint"
-            variant="outline"
-            style={styles.biometricBtn}
-            icon={<Icon name="fingerprint" size={18} color={colors.text.primary} />}
-            onPress={() => {}}
-          />
-          <View style={{ width: sp.sm }} />
-          <AppButton
-            title="Face ID"
-            variant="outline"
-            style={styles.biometricBtn}
-            icon={<Icon name="face-recognition" size={18} color={colors.text.primary} />}
-            onPress={() => {}}
-          />
+          {methods.map((method, index) => (
+            <React.Fragment key={method}>
+              {index > 0 && <View style={styles.biometricGap} />}
+              <AppButton
+                title={method === 'faceid' ? 'Face ID' : 'Fingerprint'}
+                variant="outline"
+                style={styles.biometricBtn}
+                icon={
+                  <Icon
+                    name={method === 'faceid' ? 'face-recognition' : 'fingerprint'}
+                    size={18}
+                    color={colors.text.primary}
+                  />
+                }
+                onPress={() => handleBiometric(method)}
+              />
+            </React.Fragment>
+          ))}
         </View>
 
         {/* Footer */}
@@ -154,6 +172,7 @@ function makeStyles(
     orText:       { marginHorizontal: sp.inputHorizontal, fontSize: typo.fontSize.sm },
     biometricRow: { flexDirection: 'row', marginBottom: sp.xl },
     biometricBtn: { flex: 1 },
+    biometricGap: { width: sp.sm },
     termsRow:     { alignItems: 'center'},
     termsText:    { fontSize: typo.fontSize.xs, textAlign: 'center', lineHeight: typo.lineHeight.tight },
     footer:       {

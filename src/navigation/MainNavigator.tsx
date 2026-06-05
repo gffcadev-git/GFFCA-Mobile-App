@@ -13,6 +13,7 @@ import { SavedPartiesScreen }             from '../screens/main/SavedPartiesScre
 import { TaxComplianceScreen }            from '../screens/main/TaxComplianceScreen';
 import { PreferencesScreen }              from '../screens/main/PreferencesScreen';
 import { DraftShippingInstructionsScreen } from '../screens/main/DraftShippingInstructionsScreen';
+import { ShipmentDetailScreen }           from '../screens/main/ShipmentDetailScreen';
 import { NewShippingStep1Screen }         from '../screens/main/NewShippingStep1Screen';
 import { NewShippingStep2Screen }         from '../screens/main/NewShippingStep2Screen';
 import { NewShippingStep3Screen }         from '../screens/main/NewShippingStep3Screen';
@@ -66,6 +67,7 @@ export function MainNavigator() {
       <MainStack.Screen name="TaxCompliance" component={TaxComplianceScreen} />
       <MainStack.Screen name="Preferences" component={PreferencesScreen} />
       <MainStack.Screen name="DraftShippingInstructions" component={DraftShippingInstructionsScreen} />
+      <MainStack.Screen name="ShipmentDetail" component={ShipmentDetailScreen} />
     </MainStack.Navigator>
   );
 }

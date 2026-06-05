@@ -7,13 +7,15 @@ export type DetailRow = { label: string; value: string };
 type Props = Readonly<{
   heading: string;
   rows: DetailRow[];
+  /** Show hairline dividers between rows (default true) */
+  dividers?: boolean;
 }>;
 
 /**
- * A titled card listing label/value rows separated by hairline dividers.
- * Used for read-only detail sections (company details, summaries, …).
+ * A titled card listing label/value rows, optionally separated by hairline
+ * dividers. Used for read-only detail sections (company details, summaries, …).
  */
-export function DetailGroup({ heading, rows }: Props) {
+export function DetailGroup({ heading, rows, dividers = true }: Props) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
@@ -27,7 +29,7 @@ export function DetailGroup({ heading, rows }: Props) {
           key={r.label}
           style={[
             styles.row,
-            i < rows.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
+            dividers && i < rows.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth },
           ]}
         >
           <Text style={[styles.label, { color: colors.text.secondary }]}>{r.label}</Text>

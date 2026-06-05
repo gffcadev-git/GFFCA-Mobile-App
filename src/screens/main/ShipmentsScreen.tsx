@@ -7,38 +7,12 @@ import { useColors, useSpacing, useTypography } from '../../theme';
 import type { MainStackParamList }        from '../../navigation/types';
 import { TabHeader }                      from '../../components/TabHeader';
 import { FilterChips }                    from '../../components/FilterChips';
-import { Badge, BadgeTone }               from '../../components/Badge';
+import { Badge }                          from '../../components/Badge';
 import { Icon }                           from '../../components/Icon';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
+import { SHIPMENTS, SHIPMENT_STATUS_TONE, Shipment } from '../../data/shipments';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-type Status = 'Pending you' | 'Under review' | 'Submitted' | 'Draft' | 'Completed';
-
-type Shipment = {
-  id:       string;
-  ref:      string;
-  status:   Status;
-  date:     string;
-  route:    string;
-};
-
-const STATUS_TONE: Record<Status, BadgeTone> = {
-  'Pending you':  'error',
-  'Under review': 'warning',
-  'Submitted':    'success',
-  'Draft':        'neutral',
-  'Completed':    'success',
-};
-
-const SHIPMENTS: Shipment[] = [
-  { id: '1', ref: '#GFF-2047', status: 'Pending you',  date: 'May 28', route: 'Kingston, Jamaica · Used auto' },
-  { id: '2', ref: '#GFF-2043', status: 'Under review', date: 'May 25', route: 'Lagos, Nigeria · Metal scrap' },
-  { id: '3', ref: '#GFF-2039', status: 'Submitted',    date: 'May 18', route: 'Accra, Ghana · Used clothing' },
-  { id: '4', ref: '#GFF-2031', status: 'Draft',        date: 'May 15', route: 'Banjul, Gambia · Used auto' },
-  { id: '5', ref: '#GFF-2025', status: 'Completed',    date: 'May 9',  route: 'Freetown, SL · Used machinery' },
-  { id: '6', ref: '#GFF-2018', status: 'Completed',    date: 'May 2',  route: 'Monrovia, LR · Used auto' },
-];
+// ─── Filters ──────────────────────────────────────────────────────────────────
 
 const FILTERS = ['All', 'Action needed', 'Under review', 'Submitted'];
 
@@ -70,14 +44,16 @@ function ShipmentCard({ data, onPress }: Readonly<{ data: Shipment; onPress: () 
       <View style={styles.body}>
         <View style={styles.topRow}>
           <Text style={[styles.ref, { color: colors.text.link }]}>{data.ref}</Text>
-          <Badge label={data.status} tone={STATUS_TONE[data.status]} />
+          <Badge label={data.status} tone={SHIPMENT_STATUS_TONE[data.status]} />
           <View style={styles.spacer} />
           <Text style={[styles.date, { color: colors.text.secondary }]}>{data.date}</Text>
         </View>
 
         <View style={styles.metaRow}>
           <Icon name="map-marker-outline" size={13} color={colors.text.secondary} />
-          <Text style={[styles.route, { color: colors.text.secondary }]} numberOfLines={1}>{data.route}</Text>
+          <Text style={[styles.route, { color: colors.text.secondary }]} numberOfLines={1}>
+            {data.destination} · {data.cargoType}
+          </Text>
         </View>
       </View>
 
@@ -101,6 +77,8 @@ export function ShipmentsScreen() {
   function openShipment(s: Shipment) {
     if (s.status === 'Draft') {
       navigation.navigate('DraftShippingInstructions');
+    } else {
+      navigation.navigate('ShipmentDetail', { ref: s.ref });
     }
   }
 
