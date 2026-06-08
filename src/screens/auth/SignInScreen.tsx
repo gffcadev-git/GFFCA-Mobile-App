@@ -17,6 +17,8 @@ import { AppButton }          from '../../components/AppButton';
 import { AssetImage }         from '../../components/AssetImage';
 import { Icon }               from '../../components/Icon';
 import { useBiometrics, BiometricMethod } from '../../services/biometrics';
+import { api, type ApiError }  from '../../apiCall';
+import { useAuthStore }        from '../../stores/authStore';
 
 export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const colors = useColors();
@@ -30,11 +32,27 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const [loading, setLoading]   = useState(false);
 
   const { methods, authenticate } = useBiometrics();
+  const signIn = useAuthStore((s) => s.signIn);
 
-  function handleSignIn() {
+  async function handleSignIn() {
+    if (!email.trim() || !password) {
+      Alert.alert('Missing details', 'Please enter your email and password.');
+      return;
+    }
+
     setLoading(true);
-    // TODO: wire up auth API
-    setTimeout(() => setLoading(false), 1500);
+    try {
+      const { accessToken, refreshToken, user } = await api.auth.login({
+        email: email.trim(),
+        password,
+      });
+      await signIn({ token: accessToken, refreshToken, user });
+    } catch (err) {
+      const message = (err as ApiError)?.message ?? 'Unable to sign in. Please try again.';
+      Alert.alert('Sign in failed', message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleBiometric(method: BiometricMethod) {

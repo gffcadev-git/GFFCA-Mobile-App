@@ -4,7 +4,9 @@
  */
 export const ENV = {
   /** Base URL for all API calls — replace with the real backend. */
-  API_BASE_URL: 'https://api.gffca.com',
+  API_BASE_URL: 'http://localhost:3000/api',
   /** Default request timeout in ms. */
   API_TIMEOUT: 20000,
+  /** Default tenant code sent with auth requests (hard-coded for now). */
+  DEFAULT_TENANT_CODE: 'gff',
 };

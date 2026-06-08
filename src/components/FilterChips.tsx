@@ -22,6 +22,7 @@ export function FilterChips({ options, value, onChange }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={styles.container}
       contentContainerStyle={styles.row}
     >
       {options.map(option => {
@@ -59,7 +60,14 @@ function makeStyles(
   typo: ReturnType<typeof useTypography>,
 ) {
   return StyleSheet.create({
+    // Pin the horizontal ScrollView to its content height — otherwise it
+    // expands to fill leftover vertical space and the chips stretch tall.
+    container: {
+      flexGrow:   0,
+      flexShrink: 0,
+    },
     row: {
+      alignItems:        'center',
       gap:               sp.xs,
       paddingHorizontal: sp.screenHorizontal,
       paddingVertical:   sp.xs,

@@ -25,7 +25,8 @@ export const api = {
 export { httpClient } from './client';
 export { ENDPOINTS } from './endpoints';
 export * from './types';
-export type { LoginPayload, LoginResponse, AuthUser } from './auth.api';
+export type { LoginPayload, LoginData } from './auth.api';
+export type { AuthUser, AuthSession } from '../stores/authStore';
 export type { NotificationDTO } from './notifications.api';
 export type { PartyDTO, PartyType } from './parties.api';
 export type { ConversationDTO, MessageDTO } from './messages.api';
