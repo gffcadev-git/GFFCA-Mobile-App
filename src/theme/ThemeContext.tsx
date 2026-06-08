@@ -32,29 +32,21 @@ const ThemeContext = createContext<ThemeContextValue>({
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme]     = useState<AppTheme>(DEFAULT_THEME);
-  const [loading, setLoading] = useState(true);
+  // MMKV is synchronous → seed from cache immediately (no flash, no loading gate)
+  const [theme, setTheme] = useState<AppTheme>(() => getCachedTheme());
+  const [loading]         = useState(false);
 
   const refresh = useCallback(async () => {
     const updated = await fetchRemoteTheme();
     setTheme(updated);
   }, []);
 
-  // On mount: load cache first (instant), then fetch latest in background
+  // On mount: fetch the latest theme in the background
   useEffect(() => {
     let cancelled = false;
-
-    async function init() {
-      const cached = await getCachedTheme();
-      if (!cancelled) {
-        setTheme(cached);
-        setLoading(false);
-      }
-      const fresh = await fetchRemoteTheme();
+    fetchRemoteTheme().then(fresh => {
       if (!cancelled) setTheme(fresh);
-    }
-
-    init();
+    });
     return () => { cancelled = true; };
   }, []);
 

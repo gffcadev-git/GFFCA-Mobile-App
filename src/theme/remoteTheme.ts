@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../services/storage';
 import { Colors, ThemeColors } from './colors';
 import { Spacing, ThemeSpacing } from './spacing';
 import { Typography, ThemeTypography } from './typography';
@@ -23,7 +23,7 @@ export type RemoteAssets = {
 };
 
 export type AppTheme = {
-  /** Increment this to bust the local AsyncStorage cache */
+  /** Increment this to bust the local (MMKV) theme cache */
   version: number;
   colors:     ThemeColors;
   assets:     RemoteAssets;
@@ -49,13 +49,28 @@ export const DEFAULT_THEME: AppTheme = {
   typography: Typography,
 };
 
-// ─── Fetch & cache ────────────────────────────────────────────────────────────
+// ─── Fetch & cache (MMKV-backed) ──────────────────────────────────────────────
+
+/**
+ * Returns the MMKV-cached theme synchronously (or DEFAULT_THEME). Because MMKV
+ * is sync, the provider can read this on the very first render → no theme flash.
+ */
+export function getCachedTheme(): AppTheme {
+  const cached = storage.getString(CACHE_KEY);
+  if (cached) {
+    try {
+      return mergeWithDefaults(JSON.parse(cached));
+    } catch {
+      // corrupt cache → fall through to default
+    }
+  }
+  return DEFAULT_THEME;
+}
 
 /**
  * Tries to fetch the remote theme.json from the CDN.
- * On success → saves to AsyncStorage and returns the new theme.
- * On failure → returns the AsyncStorage-cached theme if available,
- *              otherwise falls back to DEFAULT_THEME.
+ * On success → saves to MMKV and returns the new theme.
+ * On failure → returns the MMKV-cached theme (or DEFAULT_THEME).
  */
 export async function fetchRemoteTheme(): Promise<AppTheme> {
   try {
@@ -66,29 +81,11 @@ export async function fetchRemoteTheme(): Promise<AppTheme> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const remote: AppTheme = await res.json();
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(remote));
+    storage.set(CACHE_KEY, JSON.stringify(remote));
     return mergeWithDefaults(remote);
   } catch {
-    const cached = await AsyncStorage.getItem(CACHE_KEY);
-    if (cached) {
-      return mergeWithDefaults(JSON.parse(cached));
-    }
-    return DEFAULT_THEME;
+    return getCachedTheme();
   }
-}
-
-/**
- * Returns the AsyncStorage-cached theme synchronously (if available)
- * so the app can render the correct theme before the async fetch resolves.
- */
-export async function getCachedTheme(): Promise<AppTheme> {
-  try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY);
-    if (cached) return mergeWithDefaults(JSON.parse(cached));
-  } catch {
-    // ignore
-  }
-  return DEFAULT_THEME;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -10,7 +10,8 @@ import { FilterChips }                    from '../../components/FilterChips';
 import { Badge }                          from '../../components/Badge';
 import { Icon }                           from '../../components/Icon';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
-import { SHIPMENTS, SHIPMENT_STATUS_TONE, Shipment } from '../../data/shipments';
+import { SHIPMENT_STATUS_TONE, Shipment } from '../../data/shipments';
+import { useShipments } from '../../hooks/useShipments';
 
 // ─── Filters ──────────────────────────────────────────────────────────────────
 
@@ -71,8 +72,9 @@ export function ShipmentsScreen() {
   const navigation = useNavigation<Nav>();
   const styles     = makeStyles(sp);
 
+  const { data: shipments = [] } = useShipments();
   const [filter, setFilter] = useState('All');
-  const visible = SHIPMENTS.filter(s => matchesFilter(s, filter));
+  const visible = shipments.filter(s => matchesFilter(s, filter));
 
   function openShipment(s: Shipment) {
     if (s.status === 'Draft') {
