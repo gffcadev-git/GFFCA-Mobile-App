@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useColors } from '../theme';
+import { useColors, useTypography } from '../theme';
 
 type Props = Readonly<{
   /** Initials shown inside the circle, e.g. "AE" */
@@ -17,6 +17,7 @@ type Props = Readonly<{
  */
 export function Avatar({ initials, size = 40, color }: Props) {
   const colors = useColors();
+  const typo   = useTypography();
 
   return (
     <View
@@ -30,7 +31,7 @@ export function Avatar({ initials, size = 40, color }: Props) {
         },
       ]}
     >
-      <Text style={[styles.text, { color: colors.primary.contrastText, fontSize: size * 0.4 }]}>
+      <Text style={[styles.text, { color: colors.primary.contrastText, fontSize: size * 0.4, fontWeight: typo.fontWeight.bold }]}>
         {initials}
       </Text>
     </View>
@@ -39,5 +40,5 @@ export function Avatar({ initials, size = 40, color }: Props) {
 
 const styles = StyleSheet.create({
   circle: { alignItems: 'center', justifyContent: 'center' },
-  text:   { fontWeight: '700' },
+  text:   {},
 });

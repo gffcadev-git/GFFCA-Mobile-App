@@ -8,7 +8,7 @@ import {
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
 import { useNavigation }            from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useColors, useTypography } from '../theme';
+import { useColors, useSpacing, useTypography } from '../theme';
 import { Icon, IconName }           from './Icon';
 import type { MainTabParamList }    from '../navigation/types';
 
@@ -43,8 +43,10 @@ type TabNav = BottomTabNavigationProp<MainTabParamList>;
 
 function TabItem({ label, iconDefault, iconFilled, isActive, badge, onPress }: TabItemProps) {
   const colors = useColors();
+  const sp     = useSpacing();
   const typo   = useTypography();
   const color  = isActive ? colors.primary.main : colors.text.secondary;
+  const itemStyles = makeItemStyles(sp);
 
   return (
     <TouchableOpacity style={itemStyles.wrap} onPress={onPress} activeOpacity={0.7}>
@@ -52,7 +54,9 @@ function TabItem({ label, iconDefault, iconFilled, isActive, badge, onPress }: T
         <Icon name={isActive ? iconFilled : iconDefault} size={24} color={color} />
         {badge != null && badge > 0 && (
           <View style={[itemStyles.badge, { backgroundColor: colors.error.main }]}>
-            <Text style={itemStyles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+            <Text style={[itemStyles.badgeText, { color: colors.primary.contrastText, fontSize: typo.fontSize.xxs, fontWeight: typo.fontWeight.bold }]}>
+              {badge > 99 ? '99+' : badge}
+            </Text>
           </View>
         )}
       </View>
@@ -63,22 +67,24 @@ function TabItem({ label, iconDefault, iconFilled, isActive, badge, onPress }: T
   );
 }
 
-const itemStyles = StyleSheet.create({
-  wrap:      { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 10, paddingBottom: 8 },
-  badge:     {
-    position:          'absolute',
-    top:               -4,
-    right:             -8,
-    minWidth:          16,
-    height:            16,
-    borderRadius:      8,
-    alignItems:        'center',
-    justifyContent:    'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: { fontSize: 9, fontWeight: '700', color: '#fff' },
-  label:     { marginTop: 3 },
-});
+function makeItemStyles(sp: ReturnType<typeof useSpacing>) {
+  return StyleSheet.create({
+    wrap:      { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: sp.xs, paddingBottom: sp.xs },
+    badge:     {
+      position:          'absolute',
+      top:               -sp.xxs,
+      right:             -sp.xs,
+      minWidth:          16,
+      height:            16,
+      borderRadius:      8,
+      alignItems:        'center',
+      justifyContent:    'center',
+      paddingHorizontal: sp.xxxs,
+    },
+    badgeText: {},
+    label:     { marginTop: sp.xxxs },
+  });
+}
 
 // ─── BottomNavBar ─────────────────────────────────────────────────────────────
 
@@ -110,7 +116,7 @@ export function BottomNavBar({ activeTab, messageBadge, onFabPress }: Props) {
         pointerEvents="box-none"
       >
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary.main }]}
+          style={[styles.fab, { backgroundColor: colors.primary.main, shadowColor: colors.black }]}
           onPress={handleFabPress}
           activeOpacity={0.85}
         >
@@ -195,7 +201,6 @@ const styles = StyleSheet.create({
     borderRadius:   FAB_SIZE / 2,
     alignItems:     'center',
     justifyContent: 'center',
-    shadowColor:    '#000',
     shadowOffset:   { width: 0, height: 6 },
     shadowOpacity:  0.35,
     shadowRadius:   10,

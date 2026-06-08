@@ -167,11 +167,11 @@ function makeTimelineStyles(
     },
     dotMuted:   { borderWidth: 1 },
     activeCore: { width: 8, height: 8, borderRadius: 4 },
-    connector:  { width: 2, flex: 1, minHeight: sp.md, marginVertical: 2 },
+    connector:  { width: 2, flex: 1, minHeight: sp.md, marginVertical: sp.xxxs },
 
     text:  { flex: 1, paddingBottom: sp.md },
     label: { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
-    meta:  { fontSize: typo.fontSize.sm, marginTop: 1 },
+    meta:  { fontSize: typo.fontSize.sm, marginTop: sp.hairline },
   });
 }
 

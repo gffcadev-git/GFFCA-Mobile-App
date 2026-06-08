@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,9 +10,10 @@ import {
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
 import { useNavigation }            from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useColors, useSpacing, useTypography } from '../../theme';
+import { useColors, useSpacing, useTypography, useAssets } from '../../theme';
 import type { MainStackParamList }  from '../../navigation/types';
 import { Icon }                     from '../../components/Icon';
+import { AssetImage }               from '../../components/AssetImage';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -92,15 +94,36 @@ export function DashboardScreen() {
   const colors     = useColors();
   const sp         = useSpacing();
   const typo       = useTypography();
+  const assets     = useAssets();
   const insets     = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const styles     = makeDashboardStyles(sp, typo);
+
+  const welcomeContent = (
+    <>
+      <Text style={[styles.welcomeText, { color: colors.text.primary }]}>
+        Welcome back, James
+      </Text>
+      <Text style={[styles.welcomeSub, { color: colors.text.secondary }]}>
+        You have{' '}
+        <Text style={{ color: colors.primary.light, fontWeight: typo.fontWeight.semiBold }}>
+          3 items
+        </Text>{' '}
+        requiring your response →
+      </Text>
+    </>
+  );
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + sp.xs }]}>
-        <Text style={[styles.headerAppName, { color: colors.text.primary }]}>GFF Portal</Text>
+        <AssetImage
+          uri={assets.logo}
+          style={styles.headerLogo}
+          resizeMode="contain"
+          fallback={<Text style={[styles.headerAppName, { color: colors.text.primary }]}>GFF Portal</Text>}
+        />
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
             <Icon name="bell-outline" size={24} color={colors.text.primary} />
@@ -118,19 +141,21 @@ export function DashboardScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Welcome banner */}
-        <View style={[styles.welcomeCard, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
-          <Text style={[styles.welcomeText, { color: colors.text.primary }]}>
-            Welcome back, James
-          </Text>
-          <Text style={[styles.welcomeSub, { color: colors.text.secondary }]}>
-            You have{' '}
-            <Text style={{ color: colors.primary.light, fontWeight: typo.fontWeight.semiBold }}>
-              3 items
-            </Text>{' '}
-            requiring your response →
-          </Text>
-        </View>
+        {/* Welcome banner — remote background graphic when configured */}
+        {assets.welcomeBanner ? (
+          <ImageBackground
+            source={{ uri: assets.welcomeBanner }}
+            style={styles.welcomeCard}
+            imageStyle={styles.welcomeBannerImg}
+            resizeMode="cover"
+          >
+            {welcomeContent}
+          </ImageBackground>
+        ) : (
+          <View style={[styles.welcomeCard, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
+            {welcomeContent}
+          </View>
+        )}
 
         {/* Stats */}
         <View style={styles.statsRow}>
@@ -166,7 +191,7 @@ function makeStatCardStyles(
 ) {
   return StyleSheet.create({
     card:   { flex: 1, borderRadius: typo.borderRadius.lg, borderWidth: 1, padding: sp.md, overflow: 'hidden' },
-    value:  { fontSize: 36, fontWeight: '800', marginBottom: sp.xxs },
+    value:  { fontSize: typo.fontSize.display, fontWeight: typo.fontWeight.extraBold, marginBottom: sp.xxs },
     label:  { fontSize: typo.fontSize.xs, lineHeight: typo.lineHeight.tight },
     accent: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, borderRadius: 2 },
   });
@@ -217,6 +242,7 @@ function makeDashboardStyles(
       paddingBottom:     sp.sm,
     },
     headerAppName: { fontSize: typo.fontSize.xl, fontWeight: typo.fontWeight.bold },
+    headerLogo:    { width: 120, height: 28 },
     headerRight:   { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
     bellBtn:       { padding: sp.xxs },
     avatar:        {
@@ -230,7 +256,8 @@ function makeDashboardStyles(
 
     scroll:        { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.xxs },
 
-    welcomeCard:   { borderRadius: typo.borderRadius.lg, borderWidth: 1, padding: sp.md, marginBottom: sp.md },
+    welcomeCard:   { borderRadius: typo.borderRadius.lg, borderWidth: 1, padding: sp.md, marginBottom: sp.md, overflow: 'hidden' },
+    welcomeBannerImg: { borderRadius: typo.borderRadius.lg },
     welcomeText:   { fontSize: typo.fontSize.xxl, fontWeight: typo.fontWeight.bold, marginBottom: sp.xxs },
     welcomeSub:    { fontSize: typo.fontSize.md, lineHeight: typo.lineHeight.tight },
 

@@ -30,9 +30,10 @@ const IDS: ComplianceId[] = [
 
 function EditButton() {
   const colors = useColors();
+  const sp     = useSpacing();
   const typo   = useTypography();
   return (
-    <TouchableOpacity style={editStyles.btn} hitSlop={8} activeOpacity={0.7}>
+    <TouchableOpacity style={[editStyles.btn, { gap: sp.xxs }]} hitSlop={8} activeOpacity={0.7}>
       <Icon name="pencil-outline" size={14} color={colors.text.link} />
       <Text style={[editStyles.text, { color: colors.text.link, fontSize: typo.fontSize.md, fontWeight: typo.fontWeight.semiBold }]}>
         Edit
@@ -42,7 +43,7 @@ function EditButton() {
 }
 
 const editStyles = StyleSheet.create({
-  btn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  btn:  { flexDirection: 'row', alignItems: 'center' },
   text: {},
 });
 
@@ -131,7 +132,7 @@ function makeCardStyles(
       justifyContent: 'center',
     },
     body:  { flex: 1 },
-    label: { fontSize: typo.fontSize.xs, marginBottom: 2 },
+    label: { fontSize: typo.fontSize.xs, marginBottom: sp.xxxs },
     value: { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.bold },
   });
 }

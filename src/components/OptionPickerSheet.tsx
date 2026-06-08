@@ -147,6 +147,6 @@ function makeStyles(
     },
     optionBody:  { flex: 1 },
     optionLabel: { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
-    optionDesc:  { fontSize: typo.fontSize.sm, marginTop: 1 },
+    optionDesc:  { fontSize: typo.fontSize.sm, marginTop: sp.hairline },
   });
 }

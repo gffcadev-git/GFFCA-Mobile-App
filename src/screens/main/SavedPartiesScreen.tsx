@@ -136,9 +136,9 @@ function makeCardStyles(
       marginBottom:  sp.sm,
     },
     body:    { flex: 1 },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: sp.xs, marginBottom: 3 },
+    nameRow: { flexDirection: 'row', alignItems: 'center', gap: sp.xs, marginBottom: sp.xxxs },
     name:    { flexShrink: 1, fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.bold },
-    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: sp.xxs, marginBottom: sp.xxxs },
     meta:    { flex: 1, fontSize: typo.fontSize.sm },
     tax:     { fontSize: typo.fontSize.sm },
   });

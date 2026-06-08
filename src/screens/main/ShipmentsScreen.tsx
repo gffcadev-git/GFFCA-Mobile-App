@@ -130,7 +130,7 @@ function makeCardStyles(
     ref:     { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.bold },
     spacer:  { flex: 1 },
     date:    { fontSize: typo.fontSize.xs },
-    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: sp.xxs },
     route:   { flex: 1, fontSize: typo.fontSize.sm },
   });
 }

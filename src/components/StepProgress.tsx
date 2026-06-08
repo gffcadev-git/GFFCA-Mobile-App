@@ -24,7 +24,7 @@ export function StepProgress({ steps, currentStep }: Readonly<Props>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
-  const styles = makeStyles(sp);
+  const styles = makeStyles(sp, typo);
 
   return (
     <View style={styles.container}>
@@ -109,7 +109,10 @@ export function StepProgress({ steps, currentStep }: Readonly<Props>) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-function makeStyles(sp: ReturnType<typeof useSpacing>) {
+function makeStyles(
+  sp:   ReturnType<typeof useSpacing>,
+  typo: ReturnType<typeof useTypography>,
+) {
   return StyleSheet.create({
     container: {
       flexDirection:     'row',
@@ -158,15 +161,15 @@ function makeStyles(sp: ReturnType<typeof useSpacing>) {
       elevation:     6,
     },
     circleNum: {
-      fontSize:   12,
-      fontWeight: '700',
+      fontSize:   typo.fontSize.xs,
+      fontWeight: typo.fontWeight.bold,
     },
 
     label: {
-      marginTop:  6,
-      fontSize:   10,
+      marginTop:  sp.xs,
+      fontSize:   typo.fontSize.xxs,
       textAlign:  'center',
-      letterSpacing: 0.1,
+      letterSpacing: typo.letterSpacing.tight,
     },
   });
 }

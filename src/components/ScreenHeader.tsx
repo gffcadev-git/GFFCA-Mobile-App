@@ -111,7 +111,7 @@ function makeStyles(
       textAlign:  'center',
       fontSize:   typo.fontSize.sm,
       fontWeight: typo.fontWeight.regular,
-      marginTop:  2,
+      marginTop:  sp.xxxs,
     },
   });
 }

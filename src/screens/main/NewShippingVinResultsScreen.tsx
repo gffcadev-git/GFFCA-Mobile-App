@@ -176,11 +176,11 @@ function makeCardStyles(
     badge: {
       flexDirection:     'row',
       alignItems:        'center',
-      gap:               4,
+      gap:               sp.xxs,
       borderWidth:       1,
       borderRadius:      typo.borderRadius.full,
       paddingHorizontal: sp.xs,
-      paddingVertical:   4,
+      paddingVertical:   sp.xxs,
     },
     badgeText: { fontSize: typo.fontSize.xs, fontWeight: typo.fontWeight.semiBold },
 

@@ -169,7 +169,7 @@ function makeStyles(
     linkedBadge: {
       flexDirection:     'row',
       alignItems:        'center',
-      gap:               4,
+      gap:               sp.xxs,
       paddingHorizontal: sp.xs,
       paddingVertical:   sp.xxs,
       borderRadius:      typo.borderRadius.full,

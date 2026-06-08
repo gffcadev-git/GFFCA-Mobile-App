@@ -189,7 +189,7 @@ function makeSectionStyles(
       fontWeight:    typo.fontWeight.semiBold,
       letterSpacing: typo.letterSpacing.wide,
     },
-    editBtn:  { flexDirection: 'row', alignItems: 'center', gap: 3 },
+    editBtn:  { flexDirection: 'row', alignItems: 'center', gap: sp.xxxs },
     editText: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold },
 
     row: {

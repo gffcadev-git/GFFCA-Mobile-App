@@ -8,6 +8,7 @@
 
 export const Typography = {
   fontSize: {
+    xxs:  10,   // tiny badges / pill counters
     xs:   12,   // terms / fine print
     sm:   13,   // labels, captions, helper text
     md:   14,   // body copy, tagline, sub-heading
@@ -17,13 +18,15 @@ export const Typography = {
     xxl:  26,   // page heading
     xxxl: 28,   // brand / hero title
     icon: 32,   // emoji icon placeholders
+    display: 36, // dashboard stat numerals
   },
 
   fontWeight: {
-    regular:  '400' as const,
-    medium:   '500' as const,
-    semiBold: '600' as const,
-    bold:     '700' as const,
+    regular:   '400' as const,
+    medium:    '500' as const,
+    semiBold:  '600' as const,
+    bold:      '700' as const,
+    extraBold: '800' as const,
   },
 
   letterSpacing: {

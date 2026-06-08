@@ -42,7 +42,9 @@ const MESSAGES: Message[] = [
 
 function UrgentPill() {
   const colors = useColors();
+  const sp     = useSpacing();
   const typo   = useTypography();
+  const pillStyles = makePillStyles(sp, typo);
   return (
     <View style={[pillStyles.pill, { borderColor: colors.error.main }]}>
       <Icon name="flag-variant" size={13} color={colors.error.main} />
@@ -53,18 +55,23 @@ function UrgentPill() {
   );
 }
 
-const pillStyles = StyleSheet.create({
-  pill: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:               4,
-    borderWidth:       1,
-    borderRadius:      9999,
-    paddingHorizontal: 10,
-    paddingVertical:   5,
-  },
-  text: {},
-});
+function makePillStyles(
+  sp:   ReturnType<typeof useSpacing>,
+  typo: ReturnType<typeof useTypography>,
+) {
+  return StyleSheet.create({
+    pill: {
+      flexDirection:     'row',
+      alignItems:        'center',
+      gap:               sp.xxs,
+      borderWidth:       1,
+      borderRadius:      typo.borderRadius.full,
+      paddingHorizontal: sp.sm,
+      paddingVertical:   sp.xxs,
+    },
+    text: {},
+  });
+}
 
 // ─── ChatBubble ───────────────────────────────────────────────────────────────
 

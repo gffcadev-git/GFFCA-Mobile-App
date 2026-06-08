@@ -12,9 +12,10 @@ import { Icon }                    from '../../components/Icon';
 
 function EditButton() {
   const colors = useColors();
+  const sp     = useSpacing();
   const typo   = useTypography();
   return (
-    <TouchableOpacity style={editStyles.btn} hitSlop={8} activeOpacity={0.7}>
+    <TouchableOpacity style={[editStyles.btn, { gap: sp.xxs }]} hitSlop={8} activeOpacity={0.7}>
       <Icon name="pencil-outline" size={14} color={colors.text.link} />
       <Text style={[editStyles.text, { color: colors.text.link, fontSize: typo.fontSize.md, fontWeight: typo.fontWeight.semiBold }]}>
         Edit
@@ -24,7 +25,7 @@ function EditButton() {
 }
 
 const editStyles = StyleSheet.create({
-  btn:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  btn:  { flexDirection: 'row', alignItems: 'center' },
   text: {},
 });
 
@@ -109,9 +110,9 @@ function makeStyles(
     verified: {
       flexDirection:     'row',
       alignItems:        'center',
-      gap:               4,
+      gap:               sp.xxs,
       paddingHorizontal: sp.sm,
-      paddingVertical:   4,
+      paddingVertical:   sp.xxs,
       borderRadius:      typo.borderRadius.full,
     },
     verifiedText: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold },

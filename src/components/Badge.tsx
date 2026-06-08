@@ -49,10 +49,10 @@ function makeStyles(
     badge: {
       flexDirection:     'row',
       alignItems:        'center',
-      gap:               3,
+      gap:               sp.xxxs,
       alignSelf:         'flex-start',
       paddingHorizontal: sp.xs,
-      paddingVertical:   3,
+      paddingVertical:   sp.xxxs,
       borderRadius:      typo.borderRadius.full,
     },
     text: { fontSize: typo.fontSize.xs, fontWeight: typo.fontWeight.semiBold },

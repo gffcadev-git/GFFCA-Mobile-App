@@ -59,7 +59,7 @@ function makeStyles(
       gap:            sp.xs,
     },
     name:      { flex: 1, fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
-    usedRow:   { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    usedRow:   { flexDirection: 'row', alignItems: 'center', gap: sp.xxs },
     usedLabel: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold },
     useBtn:    { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold },
   });

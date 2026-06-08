@@ -7,14 +7,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets }              from 'react-native-safe-area-context';
 import { ForgotPasswordConfirmationProps } from '../../navigation/types';
-import { useColors, useSpacing, useTypography } from '../../theme';
+import { useColors, useSpacing, useTypography, useAssets } from '../../theme';
 import { ScreenHeader }                   from '../../components/ScreenHeader';
+import { AssetImage }                     from '../../components/AssetImage';
 import { Icon }                           from '../../components/Icon';
 
 export function ForgotPasswordConfirm({ navigation, route }: Readonly<ForgotPasswordConfirmationProps>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
+  const assets = useAssets();
   const insets = useSafeAreaInsets();
   const { email } = route.params;
 
@@ -25,9 +27,14 @@ export function ForgotPasswordConfirm({ navigation, route }: Readonly<ForgotPass
       <ScreenHeader title="Reset password" onBack={() => navigation.goBack()} />
 
       <View style={[styles.content, { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.lg }]}>
-        {/* Lock icon — same as email screen */}
+        {/* Email-sent graphic — remote image with lock icon fallback */}
         <View style={[styles.iconWrap, { backgroundColor: colors.background.elevated }]}>
-          <Icon name="lock" size={26} color={colors.primary.light} />
+          <AssetImage
+            uri={assets.emailSentIcon}
+            style={styles.graphic}
+            resizeMode="contain"
+            fallback={<Icon name="lock" size={26} color={colors.primary.light} />}
+          />
         </View>
 
         <Text style={[styles.heading, { color: colors.text.primary }]}>
@@ -92,6 +99,7 @@ function makeStyles(
       justifyContent: 'center',
       marginBottom:   sp.lg,
     },
+    graphic: { width: 30, height: 30 },
 
     heading: {
       fontSize:     typo.fontSize.xxl,

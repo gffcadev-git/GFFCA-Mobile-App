@@ -142,7 +142,7 @@ function makeStyles(
       marginBottom:  sp.lg,
     },
     profileInfo: { flex: 1 },
-    profileName: { fontSize: typo.fontSize.xl, fontWeight: typo.fontWeight.bold, marginBottom: 2 },
+    profileName: { fontSize: typo.fontSize.xl, fontWeight: typo.fontWeight.bold, marginBottom: sp.xxxs },
     profileRole: { fontSize: typo.fontSize.sm },
 
     sectionHeading: {

@@ -103,7 +103,7 @@ function makeStyles(
     },
     labelCol: { flex: 1 },
     label:    { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
-    sublabel: { fontSize: typo.fontSize.xs, marginTop: 1 },
+    sublabel: { fontSize: typo.fontSize.xs, marginTop: sp.hairline },
     value:    { fontSize: typo.fontSize.sm },
   });
 }

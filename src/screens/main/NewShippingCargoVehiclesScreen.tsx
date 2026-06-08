@@ -221,7 +221,7 @@ function makeCardStyles(
       fontSize:   typo.fontSize.xl,
       fontWeight: typo.fontWeight.semiBold,
     },
-    removeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    removeBtn: { flexDirection: 'row', alignItems: 'center', gap: sp.xxs },
     removeText: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold },
 
     notesLabelRow: {
@@ -233,7 +233,7 @@ function makeCardStyles(
     notesLabel: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.medium },
     optionalBadge: {
       paddingHorizontal: sp.xs,
-      paddingVertical:   2,
+      paddingVertical:   sp.xxxs,
       borderRadius:      typo.borderRadius.full,
     },
     optionalText: { fontSize: typo.fontSize.xs },

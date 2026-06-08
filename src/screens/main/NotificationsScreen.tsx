@@ -41,7 +41,9 @@ const EARLIER: Notification[] = [
 
 function MarkAllReadButton() {
   const colors = useColors();
+  const sp     = useSpacing();
   const typo   = useTypography();
+  const markStyles = makeMarkStyles(sp, typo);
   return (
     <TouchableOpacity
       style={[markStyles.pill, { borderColor: colors.primary.main }]}
@@ -54,15 +56,20 @@ function MarkAllReadButton() {
   );
 }
 
-const markStyles = StyleSheet.create({
-  pill: {
-    borderWidth:       1,
-    borderRadius:      9999,
-    paddingHorizontal: 12,
-    paddingVertical:   6,
-  },
-  text: {},
-});
+function makeMarkStyles(
+  sp:   ReturnType<typeof useSpacing>,
+  typo: ReturnType<typeof useTypography>,
+) {
+  return StyleSheet.create({
+    pill: {
+      borderWidth:       1,
+      borderRadius:      typo.borderRadius.full,
+      paddingHorizontal: sp.sm,
+      paddingVertical:   sp.xs,
+    },
+    text: {},
+  });
+}
 
 // ─── NotificationRow ──────────────────────────────────────────────────────────
 
@@ -179,7 +186,7 @@ function makeRowStyles(
     },
 
     body:    { flex: 1 },
-    topLine: { flexDirection: 'row', alignItems: 'center', gap: sp.xs, marginBottom: 3 },
+    topLine: { flexDirection: 'row', alignItems: 'center', gap: sp.xs, marginBottom: sp.xxxs },
     title:   { flex: 1, fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.bold },
     time:    { fontSize: typo.fontSize.xs },
     dot:     { width: 8, height: 8, borderRadius: 4 },

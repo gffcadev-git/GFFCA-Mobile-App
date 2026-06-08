@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SignInProps }        from '../../navigation/types';
-import { useColors, useSpacing, useTypography } from '../../theme';
+import { useColors, useSpacing, useTypography, useAssets } from '../../theme';
 import { AppInput }           from '../../components/AppInput';
 import { AppButton }          from '../../components/AppButton';
+import { AssetImage }         from '../../components/AssetImage';
 import { Icon }               from '../../components/Icon';
 import { useBiometrics, BiometricMethod } from '../../services/biometrics';
 
@@ -21,6 +22,7 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
+  const assets = useAssets();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail]       = useState('');
@@ -61,9 +63,14 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Brand */}
+        {/* Brand — remote logo graphic with text wordmark fallback */}
         <View style={styles.brand}>
-          <Text style={[styles.appName, { color: colors.text.primary }]}>GFF Portal</Text>
+          <AssetImage
+            uri={assets.logo}
+            style={styles.logo}
+            resizeMode="contain"
+            fallback={<Text style={[styles.appName, { color: colors.text.primary }]}>GFF Portal</Text>}
+          />
           <Text style={[styles.tagline, { color: colors.text.secondary }]}>
             Skating Instructors Platform
           </Text>
@@ -163,6 +170,7 @@ function makeStyles(
     root:         { flex: 1 },
     scroll:       { flexGrow: 1, paddingHorizontal: sp.screenHorizontal },
     brand:        { alignItems: 'center', marginBottom: sp.xxl },
+    logo:         { width: 200, height: 48 },
     appName:      { fontSize: typo.fontSize.xxxl, fontWeight: typo.fontWeight.bold, letterSpacing: typo.letterSpacing.wide },
     tagline:      { fontSize: typo.fontSize.md, marginTop: sp.xxs + 2 },
     form:         { marginBottom: sp.xs },

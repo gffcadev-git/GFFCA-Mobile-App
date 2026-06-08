@@ -73,7 +73,7 @@ function ConversationRow({ data, onPress }: Readonly<{ data: Conversation; onPre
           </Text>
           {data.unread > 0 && (
             <View style={[styles.unread, { backgroundColor: colors.error.main }]}>
-              <Text style={styles.unreadText}>{data.unread}</Text>
+              <Text style={[styles.unreadText, { color: colors.primary.contrastText }]}>{data.unread}</Text>
             </View>
           )}
         </View>
@@ -141,7 +141,7 @@ function makeRowStyles(
     topLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     title:   { flex: 1, fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.bold, marginRight: sp.xs },
     time:    { fontSize: typo.fontSize.xs },
-    ref:     { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold, marginTop: 2, marginBottom: sp.xxs },
+    ref:     { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold, marginTop: sp.xxxs, marginBottom: sp.xxs },
     bottomLine: { flexDirection: 'row', alignItems: 'flex-start', gap: sp.xs },
     preview: { flex: 1, fontSize: typo.fontSize.sm, lineHeight: typo.lineHeight.tight },
     unread: {
@@ -150,10 +150,10 @@ function makeRowStyles(
       borderRadius:      9,
       alignItems:        'center',
       justifyContent:    'center',
-      paddingHorizontal: 4,
-      marginTop:         2,
+      paddingHorizontal: sp.xxs,
+      marginTop:         sp.xxxs,
     },
-    unreadText: { fontSize: 10, fontWeight: '700', color: '#fff' },
+    unreadText: { fontSize: typo.fontSize.xxs, fontWeight: typo.fontWeight.bold },
   });
 }
 

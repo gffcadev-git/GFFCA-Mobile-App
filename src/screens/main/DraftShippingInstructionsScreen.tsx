@@ -150,7 +150,7 @@ function makeCardStyles(
     spacer:  { flex: 1 },
     edited:  { fontSize: typo.fontSize.xs },
 
-    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: sp.xs },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: sp.xxs, marginBottom: sp.xs },
     route:   { flex: 1, fontSize: typo.fontSize.sm },
 
     item:    { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold, marginBottom: sp.sm },

@@ -181,7 +181,7 @@ function makeStyles(
     },
     requiredBadge: {
       paddingHorizontal: sp.xs,
-      paddingVertical:   3,
+      paddingVertical:   sp.xxxs,
       borderRadius:      typo.borderRadius.full,
     },
     requiredText: {

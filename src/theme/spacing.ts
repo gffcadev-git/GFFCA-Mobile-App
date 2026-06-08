@@ -8,6 +8,8 @@
 
 export const Spacing = {
   // Base scale
+  hairline: 1,   // 1px lines, fine nudges
+  xxxs: 2,       // micro gaps (badge/label nudges)
   xxs:  4,
   xs:   8,
   sm:   12,

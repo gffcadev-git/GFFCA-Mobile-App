@@ -146,9 +146,9 @@ function makeStyles(
     parsedBadge: {
       flexDirection:     'row',
       alignItems:        'center',
-      gap:               4,
+      gap:               sp.xxs,
       paddingHorizontal: sp.xs,
-      paddingVertical:   3,
+      paddingVertical:   sp.xxxs,
       borderRadius:      typo.borderRadius.full,
     },
     parsedText: { fontSize: typo.fontSize.xs, fontWeight: typo.fontWeight.semiBold },

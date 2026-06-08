@@ -95,7 +95,7 @@ function makeStyles(
     },
     subtitle: {
       fontSize:   typo.fontSize.sm,
-      marginTop:  2,
+      marginTop:  sp.xxxs,
     },
   });
 }

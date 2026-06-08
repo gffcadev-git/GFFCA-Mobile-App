@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
 import { ForgotPasswordEmailProps } from '../../navigation/types';
-import { useColors, useSpacing, useTypography } from '../../theme';
+import { useColors, useSpacing, useTypography, useAssets } from '../../theme';
 import { AppInput }                 from '../../components/AppInput';
 import { AppButton }                from '../../components/AppButton';
+import { AssetImage }               from '../../components/AssetImage';
 import { ScreenHeader }             from '../../components/ScreenHeader';
 import { Icon }                     from '../../components/Icon';
 
@@ -20,6 +21,7 @@ export function ForgotPasswordEmail({ navigation }: Readonly<ForgotPasswordEmail
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
+  const assets = useAssets();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail]     = useState('');
@@ -49,9 +51,14 @@ export function ForgotPasswordEmail({ navigation }: Readonly<ForgotPasswordEmail
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Lock icon — left-aligned rounded square */}
+        {/* Lock graphic — remote image with lock icon fallback */}
         <View style={[styles.iconWrap, { backgroundColor: colors.background.elevated }]}>
-          <Icon name="lock" size={26} color={colors.primary.light} />
+          <AssetImage
+            uri={assets.lockIcon}
+            style={styles.graphic}
+            resizeMode="contain"
+            fallback={<Icon name="lock" size={26} color={colors.primary.light} />}
+          />
         </View>
 
         <Text style={[styles.heading, { color: colors.text.primary }]}>
@@ -107,6 +114,7 @@ function makeStyles(
       justifyContent: 'center',
       marginBottom:   sp.lg,
     },
+    graphic: { width: 30, height: 30 },
 
     heading: {
       fontSize:     typo.fontSize.xxl,

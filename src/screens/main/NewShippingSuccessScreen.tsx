@@ -191,7 +191,7 @@ function makeStyles(
     statusRow: { flexDirection: 'row', alignItems: 'center', gap: sp.sm },
     statusBadge: {
       paddingHorizontal: sp.sm,
-      paddingVertical:   3,
+      paddingVertical:   sp.xxxs,
       borderRadius:      typo.borderRadius.full,
     },
     statusText: { fontSize: typo.fontSize.xs, fontWeight: typo.fontWeight.semiBold },
