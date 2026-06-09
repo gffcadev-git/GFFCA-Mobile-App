@@ -30,8 +30,11 @@ export type DashboardTabProps = BottomTabScreenProps<MainTabParamList, 'Dashboar
 
 export type MainStackParamList = {
   Tabs:                 undefined;
-  /** `ref` is set when resuming a draft SI — drives the header title. */
-  NewShippingStep1:     { ref?: string } | undefined;
+  /**
+   * Set when resuming a draft SI: `id` fetches the saved SI to prefill the form,
+   * `ref` (SI number) drives the header title.
+   */
+  NewShippingStep1:     { id?: string; ref?: string } | undefined;
   NewShippingStep2:     undefined;
   NewShippingStep3:     undefined;
   NewShippingStep4:     undefined;

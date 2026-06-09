@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +17,7 @@ import { StepProgress }               from '../../components/StepProgress';
 import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { SavedOptionRow }             from '../../components/SavedOptionRow';
 import { WizardFooter }               from '../../components/WizardFooter';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -35,25 +36,21 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const [name,    setName]    = useState('Acme Exports Inc.');
-  const [phone,   setPhone]   = useState('+1-416-555-0100');
-  const [email,   setEmail]   = useState('ops@acmeexports.com');
-  const [taxId,   setTaxId]   = useState('CA-872 445 109');
-  const [address, setAddress] = useState('');
+  const form    = useSiDraftStore(s => s.form);
+  const setForm = useSiDraftStore(s => s.setForm);
 
   const styles = makeStyles(sp, typo);
 
   function fillFromSaved(shipper: typeof SAVED_SHIPPERS[0]) {
     if (shipper.name === 'Acme Exports Inc.') {
-      setName(shipper.name);
-      setPhone('+1-416-555-0100');
-      setEmail('ops@acmeexports.com');
-      setTaxId('CA-872 445 109');
+      setForm({
+        shipperName:  shipper.name,
+        shipperPhone: '+1-416-555-0100',
+        shipperEmail: 'ops@acmeexports.com',
+        shipperTaxId: 'CA-872 445 109',
+      });
     } else {
-      setName(shipper.name);
-      setPhone('');
-      setEmail('');
-      setTaxId('');
+      setForm({ shipperName: shipper.name, shipperPhone: '', shipperEmail: '', shipperTaxId: '' });
     }
   }
 
@@ -64,7 +61,7 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
     >
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={form.ref ?? 'New shipping instruction'}
         subtitle="Parties"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -106,16 +103,16 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
           label="Name"
           required
           placeholder="Company or person name"
-          value={name}
-          onChangeText={setName}
+          value={form.shipperName}
+          onChangeText={t => setForm({ shipperName: t })}
         />
         <AppInput
           label="Phone"
           required
           placeholder="+1-000-000-0000"
           keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
+          value={form.shipperPhone}
+          onChangeText={t => setForm({ shipperPhone: t })}
         />
         <AppInput
           label="Email"
@@ -123,20 +120,20 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
+          value={form.shipperEmail}
+          onChangeText={t => setForm({ shipperEmail: t })}
         />
         <AppInput
           label="Tax ID"
           placeholder="e.g. CA-872 445 109"
-          value={taxId}
-          onChangeText={setTaxId}
+          value={form.shipperTaxId}
+          onChangeText={t => setForm({ shipperTaxId: t })}
         />
         <AppInput
           label="Address"
           placeholder="Street, city, country"
-          value={address}
-          onChangeText={setAddress}
+          value={form.shipperAddress}
+          onChangeText={t => setForm({ shipperAddress: t })}
         />
       </ScrollView>
 
@@ -151,7 +148,7 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
         <AppButton
           title="Next →"
           onPress={() => navigation.navigate('NewShippingStep4')}
-          disabled={!name.trim() || !phone.trim() || !email.trim()}
+          disabled={!form.shipperName.trim() || !form.shipperPhone.trim() || !form.shipperEmail.trim()}
           style={styles.nextBtn}
         />
       </WizardFooter>

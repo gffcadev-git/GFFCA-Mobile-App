@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +18,8 @@ import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { InfoBanner }                 from '../../components/InfoBanner';
 import { WizardFooter }               from '../../components/WizardFooter';
 import { Icon }                       from '../../components/Icon';
+import { useShipmentDetail }          from '../../hooks/useShipments';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -31,11 +33,19 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const [bookingNumber, setBookingNumber] = useState('');
-  const [destination,   setDestination]   = useState('');
+  // Resuming a draft → fetch the saved SI; the form lives in the shared store.
+  const { data: draft } = useShipmentDetail(route.params?.id);
+  const form    = useSiDraftStore(s => s.form);
+  const setForm = useSiDraftStore(s => s.setForm);
+  const hydrate = useSiDraftStore(s => s.hydrate);
+  const reset   = useSiDraftStore(s => s.reset);
+
+  // Start each flow from a clean form; resuming hydrates once the SI loads.
+  useEffect(() => { reset(); }, [reset]);
+  useEffect(() => { if (draft) hydrate(draft); }, [draft, hydrate]);
 
   // Mock: carrier is "linked" once a booking number is entered
-  const carrierLinked = bookingNumber.trim().length > 0;
+  const carrierLinked = form.bookingNumber.trim().length > 0;
 
   const styles = makeStyles(sp, typo);
 
@@ -77,8 +87,8 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
           label="Booking number"
           placeholder="MSC1234567"
           autoCapitalize="characters"
-          value={bookingNumber}
-          onChangeText={setBookingNumber}
+          value={form.bookingNumber}
+          onChangeText={t => setForm({ bookingNumber: t })}
           helperText="The carrier / line is filled in automatically once a valid booking is entered."
         />
 
@@ -110,8 +120,8 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
           label="Destination"
           required
           placeholder="Kingston, Jamaica"
-          value={destination}
-          onChangeText={setDestination}
+          value={form.destination}
+          onChangeText={t => setForm({ destination: t })}
           helperText="City and country of final delivery."
         />
       </ScrollView>
@@ -121,7 +131,7 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
         <AppButton
           title="Next →"
           onPress={handleNext}
-          disabled={!destination.trim()}
+          disabled={!form.destination.trim()}
           style={styles.fullBtn}
         />
       </WizardFooter>

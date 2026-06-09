@@ -37,6 +37,10 @@
 	<string></string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to sign in to your GFF account quickly and securely.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>GFF uses the camera to scan VIN, container and seal numbers from your shipment documents and labels.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>GFF reads images you choose so it can scan VIN, container and seal numbers from them.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

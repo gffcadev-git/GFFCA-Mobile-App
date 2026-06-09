@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,10 +14,39 @@ import { StepProgress }               from '../../components/StepProgress';
 import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { CaptureField }               from '../../components/CaptureField';
 import { WizardFooter }               from '../../components/WizardFooter';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
+import {
+  validateContainerNumber,
+  isValidSealFormat,
+  extractContainerNumber,
+  extractSealNumber,
+  type ContainerValidation,
+}                                     from '../../services/fieldExtractorService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STEPS = ['Destination', 'Container', 'Parties', 'Cargo', 'Notify', 'Review'];
+
+type FieldStatus = { state: 'valid' | 'invalid' | 'warning'; message: string } | undefined;
+
+/** Map a container validation result to the CaptureField status line. */
+function containerStatusFor(raw: string, v: ContainerValidation): FieldStatus {
+  if (!raw.trim()) return undefined;
+  if (v.valid) {
+    return { state: 'valid', message: `Valid ISO 6346 · check digit ${v.canonical!.slice(-1)}` };
+  }
+  if (v.expectedCheckDigit) {
+    return { state: 'invalid', message: `Check digit fails — expected ${v.expectedCheckDigit}` };
+  }
+  return { state: 'invalid', message: 'Not a valid container number (AAAA NNNNNN C)' };
+}
+
+/** Map a seal value to the CaptureField status line (format-only, no checksum). */
+function sealStatusFor(raw: string): FieldStatus {
+  if (!raw.trim()) return undefined;
+  if (isValidSealFormat(raw)) return { state: 'valid', message: 'Seal format looks right' };
+  return { state: 'warning', message: 'Unusual format — confirm the seal number' };
+}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -26,10 +55,16 @@ export function NewShippingStep2Screen({ navigation }: Readonly<NewShippingStep2
   const sp     = useSpacing();
   const insets = useSafeAreaInsets();
 
-  const [containerNumber, setContainerNumber] = useState('MSCU 123 456 7');
-  const [sealNumber,      setSealNumber]      = useState('');
+  const form    = useSiDraftStore(s => s.form);
+  const setForm = useSiDraftStore(s => s.setForm);
 
   const styles = makeStyles(sp);
+
+  // ── Live validation (ISO 6346 container + seal format) ──
+  const container = validateContainerNumber(form.containerNumber);
+  const containerStatus = containerStatusFor(form.containerNumber, container);
+  const sealStatus = sealStatusFor(form.sealNumber);
+  const canContinue = container.valid;
 
   return (
     <KeyboardAvoidingView
@@ -38,7 +73,7 @@ export function NewShippingStep2Screen({ navigation }: Readonly<NewShippingStep2
     >
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={form.ref ?? 'New shipping instruction'}
         subtitle="Container & seal"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -58,18 +93,24 @@ export function NewShippingStep2Screen({ navigation }: Readonly<NewShippingStep2
         <CaptureField
           label="Container number"
           required
-          value={containerNumber}
-          onChangeText={setContainerNumber}
+          value={form.containerNumber}
+          onChangeText={t => setForm({ containerNumber: t })}
           placeholder="e.g. MSCU 123 456 7"
           parsedBadge
+          status={containerStatus}
+          parse={extractContainerNumber}
+          scanPrompt="Scan the container number"
         />
 
         <CaptureField
           label="Seal number"
           required
-          value={sealNumber}
-          onChangeText={setSealNumber}
+          value={form.sealNumber}
+          onChangeText={t => setForm({ sealNumber: t })}
           placeholder="Seal number..."
+          status={sealStatus}
+          parse={extractSealNumber}
+          scanPrompt="Scan the seal number"
         />
       </ScrollView>
 
@@ -84,7 +125,7 @@ export function NewShippingStep2Screen({ navigation }: Readonly<NewShippingStep2
         <AppButton
           title="Next →"
           onPress={() => navigation.navigate('NewShippingStep3')}
-          disabled={!containerNumber.trim()}
+          disabled={!canContinue}
           style={styles.nextBtn}
         />
       </WizardFooter>

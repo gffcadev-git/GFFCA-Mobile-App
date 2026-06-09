@@ -83,7 +83,7 @@ export function ShipmentsScreen() {
   function openShipment(s: Shipment) {
     // Drafts resume in the multi-step SI form; everything else opens its detail.
     if (s.status === 'Draft') {
-      navigation.navigate('NewShippingStep1', { ref: s.ref });
+      navigation.navigate('NewShippingStep1', { id: s.id, ref: s.ref });
       return;
     }
     navigation.navigate('ShipmentDetail', { id: s.id, ref: s.ref });

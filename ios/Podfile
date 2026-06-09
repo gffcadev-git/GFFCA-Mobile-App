@@ -5,7 +5,10 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+# ML Kit Text Recognition (@react-native-ml-kit/text-recognition) requires iOS 15.5,
+# which is higher than RN's default min (15.1), so pin the deployment target here.
+min_ios = [Gem::Version.new('15.5'), Gem::Version.new(min_ios_version_supported)].max.to_s
+platform :ios, min_ios
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']

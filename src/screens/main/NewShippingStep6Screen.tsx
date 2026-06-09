@@ -9,10 +9,14 @@ import { StepProgress }               from '../../components/StepProgress';
 import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { WizardFooter }               from '../../components/WizardFooter';
 import { Icon }                       from '../../components/Icon';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STEPS = ['Destination', 'Container', 'Parties', 'Cargo', 'Notify', 'Review'];
+
+/** Falls back to an em dash for empty values in the review. */
+const dash = (v: string) => (v.trim() ? v : '—');
 
 // ─── ReviewSection ────────────────────────────────────────────────────────────
 
@@ -76,13 +80,17 @@ export function NewShippingStep6Screen({ navigation }: Readonly<NewShippingStep6
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
+  const form = useSiDraftStore(s => s.form);
+
   const styles = makeStyles(sp, typo);
+
+  const vehicleCount = form.vehicles.filter(v => v.vin.trim()).length;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={form.ref ?? 'New shipping instruction'}
         subtitle="Review & submit"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -106,10 +114,9 @@ export function NewShippingStep6Screen({ navigation }: Readonly<NewShippingStep6
           heading="DESTINATION & BOOKING"
           onEdit={() => navigation.navigate('NewShippingStep1')}
           rows={[
-            { label: 'To',        value: 'Kingston, Jamaica' },
-            { label: 'Carrier',   value: 'MSC Mediterranean' },
-            { label: 'Booking',   value: 'MSC1234567' },
-            { label: 'Container', value: 'MSCU 123 456 7 · Seal: —' },
+            { label: 'To',        value: dash(form.destination) },
+            { label: 'Booking',   value: dash(form.bookingNumber) },
+            { label: 'Container', value: `${dash(form.containerNumber)} · Seal: ${dash(form.sealNumber)}` },
           ]}
         />
 
@@ -117,22 +124,18 @@ export function NewShippingStep6Screen({ navigation }: Readonly<NewShippingStep6
           heading="PARTIES"
           onEdit={() => navigation.navigate('NewShippingStep3')}
           rows={[
-            { label: 'Shipper',   value: 'Acme Exports Inc.' },
-            { label: 'Consignee', value: 'Kingston Motors Ltd.' },
-            { label: 'Notify',    value: 'Freight Logistics JA' },
+            { label: 'Shipper', value: dash(form.shipperName) },
+            { label: 'Notify',  value: dash(form.notifyName) },
           ]}
-          note={{ text: 'Consignee phone still missing', tone: 'error' }}
         />
 
         <ReviewSection
           heading="CARGO"
           onEdit={() => navigation.navigate('NewShippingStep4')}
           rows={[
-            { label: 'Commodity', value: 'Used auto × 2' },
-            { label: 'Vehicle 1', value: '2003 Honda Accord' },
-            { label: '+ more',    value: '1 more vehicle' },
+            { label: 'Type',     value: dash(form.cargoTypeId) },
+            { label: 'Vehicles', value: vehicleCount ? `${vehicleCount} with VIN` : '—' },
           ]}
-          note={{ text: '2 VINs verified · Not stolen · Carfax clean', tone: 'success' }}
         />
 
         <ReviewSection

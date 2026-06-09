@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
+    <!-- Camera for scanning VIN / container / seal numbers (react-native-vision-camera) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"

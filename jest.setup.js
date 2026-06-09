@@ -29,5 +29,22 @@ jest.mock('react-native-biometrics', () => ({
   BiometryTypes: { TouchID: 'TouchID', FaceID: 'FaceID', Biometrics: 'Biometrics' },
 }));
 
+// OCR / camera native modules aren't present in Jest — stub the surface the app uses.
+jest.mock('react-native-vision-camera', () => ({
+  Camera: () => null,
+  useCameraDevice: () => undefined,
+  useCameraPermission: () => ({ hasPermission: false, requestPermission: jest.fn().mockResolvedValue(false) }),
+  usePhotoOutput: () => ({ capturePhotoToFile: jest.fn().mockResolvedValue({ filePath: '' }) }),
+}));
+
+jest.mock('@react-native-ml-kit/text-recognition', () => ({
+  __esModule: true,
+  default: { recognize: jest.fn().mockResolvedValue({ text: '' }) },
+}));
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn().mockResolvedValue({ didCancel: true }),
+}));
+
 // Avoid real network calls for the remote theme fetch during tests
 globalThis.fetch = jest.fn(() => Promise.reject(new Error('network disabled in tests')));

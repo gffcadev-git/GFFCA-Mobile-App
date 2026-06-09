@@ -9,65 +9,104 @@ import { AppButton }                    from '../../components/AppButton';
 import { StepProgress }                 from '../../components/StepProgress';
 import { SaveDraftButton }              from '../../components/SaveDraftButton';
 import { WizardFooter }                 from '../../components/WizardFooter';
-import { Icon }                         from '../../components/Icon';
+import { Icon, type IconName }          from '../../components/Icon';
+import { useSiDraftStore }              from '../../stores/siDraftStore';
+import { analyzeVin, type VinAnalysis } from '../../utils/vinAnalyzer';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STEPS = ['Destination', 'Container', 'Parties', 'Cargo', 'Notify', 'Review'];
 
-const CHECKS = ['VIN format valid', 'RCMP: not stolen', 'Carfax: clean title', 'Decoder: matched'];
+type BadgeState = 'valid' | 'warning' | 'invalid' | 'pending';
+type Badge = { label: string; state: BadgeState };
 
-type VehicleResult = {
-  id:       string;
-  vin:      string;
-  make:     string;
-  model:    string;
-  year:     string;
-  bodyType: string;
-  engine:   string;
-  hybrid:   string;
-  weight:   string;
-  value:    string;
-};
+/** Offline VIN-decode badges derived from the analysis (§2). */
+function decodeBadges(a: VinAnalysis): Badge[] {
+  const badges: Badge[] = [];
 
-const RESULTS: VehicleResult[] = [
-  { id: '1', vin: '1HGCM82633A004352', make: 'Honda',  model: 'Accord',  year: '2003', bodyType: 'Sedan',     engine: '2.4L i4',  hybrid: 'No', weight: '1,580', value: '9,500' },
-  { id: '2', vin: '2T1BURHE0JC014582', make: 'Toyota', model: 'Corolla', year: '2018', bodyType: 'Hatchback', engine: '1.8L i4',  hybrid: 'No', weight: '1,315', value: '14,200' },
-];
+  badges.push(a.lengthOk
+    ? { label: 'Length 17 ✓', state: 'valid' }
+    : { label: `Length ${a.vin.length}/17`, state: 'invalid' });
+
+  badges.push(a.invalidChars.length > 0
+    ? { label: `Illegal char ${a.invalidChars.join(', ')}`, state: 'invalid' }
+    : { label: 'Alphabet OK', state: 'valid' });
+
+  if (a.checkDigitValid === true)        badges.push({ label: 'Checksum authentic', state: 'valid' });
+  else if (a.checkDigitValid === false)  badges.push({ label: `Checksum: expected ${a.expectedCheckDigit}`, state: 'warning' });
+  else                                   badges.push({ label: 'Checksum n/a', state: 'pending' });
+
+  // External checks are not part of the offline spec — shown honestly as pending
+  // until a theft (RCMP) / title (Carfax) integration is wired in.
+  badges.push({ label: 'RCMP theft: pending', state: 'pending' });
+  badges.push({ label: 'Carfax title: pending', state: 'pending' });
+
+  return badges;
+}
 
 // ─── VehicleResultCard ────────────────────────────────────────────────────────
 
-function VehicleResultCard({ index, data }: Readonly<{ index: number; data: VehicleResult }>) {
+type Editable = { make: string; model: string; year: string; bodyType: string; engine: string; hybrid: string; weight: string; value: string };
+
+const EMPTY_EDITABLE: Editable = { make: '', model: '', year: '', bodyType: '', engine: '', hybrid: '', weight: '', value: '' };
+
+function VehicleResultCard({ index, vin }: Readonly<{ index: number; vin: string }>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
   const styles = makeCardStyles(sp, typo);
 
-  // Local editable copy of the auto-pulled fields
-  const [fields, setFields] = useState(data);
-  const set = (key: keyof VehicleResult) => (v: string) => setFields(f => ({ ...f, [key]: v }));
+  const analysis = analyzeVin(vin);
+  const badges   = decodeBadges(analysis);
+
+  // Manual confirm/correct fields — left blank for the user to fill, since the
+  // offline decoder yields only region/year/checksum (no make/model API).
+  const [fields, setFields] = useState<Editable>(EMPTY_EDITABLE);
+  const set = (key: keyof Editable) => (v: string) => setFields(f => ({ ...f, [key]: v }));
+
+  const badgeStyleFor = (state: BadgeState): { border: string; fg: string; icon: IconName } => {
+    switch (state) {
+      case 'valid':   return { border: colors.success.dark, fg: colors.success.main, icon: 'check' };
+      case 'warning': return { border: colors.warning.dark, fg: colors.warning.main, icon: 'alert-outline' };
+      case 'invalid': return { border: colors.error.dark,   fg: colors.error.main,   icon: 'alert-circle-outline' };
+      default:        return { border: colors.border,       fg: colors.text.secondary, icon: 'clock-outline' };
+    }
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
       {/* Title */}
       <Text style={[styles.title, { color: colors.text.primary }]}>
         Vehicle {index + 1} — VIN{' '}
-        <Text style={{ color: colors.text.secondary }}>{data.vin}</Text>
+        <Text style={{ color: colors.text.secondary }}>{analysis.vin || '—'}</Text>
       </Text>
+
+      {/* Decoded summary (region + model year) */}
+      <View style={styles.decodeRow}>
+        <Text style={[styles.decodeLabel, { color: colors.text.secondary }]}>Region</Text>
+        <Text style={[styles.decodeValue, { color: colors.text.primary }]}>{analysis.regionAndCountry}</Text>
+      </View>
+      <View style={styles.decodeRow}>
+        <Text style={[styles.decodeLabel, { color: colors.text.secondary }]}>Model year</Text>
+        <Text style={[styles.decodeValue, { color: colors.text.primary }]}>{analysis.modelYear}</Text>
+      </View>
 
       {/* Check badges */}
       <View style={styles.badgeWrap}>
-        {CHECKS.map(c => (
-          <View key={c} style={[styles.badge, { borderColor: colors.success.dark, backgroundColor: colors.background.elevated }]}>
-            <Icon name="check" size={12} color={colors.success.main} />
-            <Text style={[styles.badgeText, { color: colors.success.main }]}>{c}</Text>
-          </View>
-        ))}
+        {badges.map(b => {
+          const bs = badgeStyleFor(b.state);
+          return (
+            <View key={b.label} style={[styles.badge, { borderColor: bs.border, backgroundColor: colors.background.elevated }]}>
+              <Icon name={bs.icon} size={12} color={bs.fg} />
+              <Text style={[styles.badgeText, { color: bs.fg }]}>{b.label}</Text>
+            </View>
+          );
+        })}
       </View>
 
-      {/* Auto-pulled details */}
+      {/* Manual confirm/correct details */}
       <Text style={[styles.subHeading, { color: colors.text.secondary }]}>
-        AUTO-PULLED DETAILS — CONFIRM OR CORRECT
+        VEHICLE DETAILS — ENTER OR CONFIRM
       </Text>
 
       <View style={styles.fieldRow}>
@@ -98,13 +137,16 @@ export function NewShippingVinResultsScreen({ navigation }: Readonly<NewShipping
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
+  const siRef    = useSiDraftStore(s => s.form.ref);
+  const vehicles = useSiDraftStore(s => s.form.vehicles);
+
   const styles = makeStyles(sp, typo);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={siRef ?? 'New shipping instruction'}
         subtitle="Cargo · VIN results"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -122,11 +164,12 @@ export function NewShippingVinResultsScreen({ navigation }: Readonly<NewShipping
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.intro, { color: colors.text.secondary }]}>
-          Checks completed for {RESULTS.length} vehicles. Review the results below — correct anything that looks wrong before continuing.
+          Decoded {vehicles.length} {vehicles.length === 1 ? 'VIN' : 'VINs'} offline — region, model year and check digit.
+          Review the results below and fill in any details before continuing.
         </Text>
 
-        {RESULTS.map((r, i) => (
-          <VehicleResultCard key={r.id} index={i} data={r} />
+        {vehicles.map((v, i) => (
+          <VehicleResultCard key={v.id} index={i} vin={v.vin} />
         ))}
       </ScrollView>
 
@@ -167,10 +210,15 @@ function makeCardStyles(
       marginBottom: sp.sm,
     },
 
+    decodeRow:   { flexDirection: 'row', justifyContent: 'space-between', marginBottom: sp.xxs },
+    decodeLabel: { fontSize: typo.fontSize.sm },
+    decodeValue: { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.semiBold, flexShrink: 1, textAlign: 'right' },
+
     badgeWrap: {
       flexDirection: 'row',
       flexWrap:      'wrap',
       gap:           sp.xs,
+      marginTop:     sp.sm,
       marginBottom:  sp.md,
     },
     badge: {

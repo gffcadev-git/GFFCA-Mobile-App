@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,14 +20,31 @@ import { CaptureField }                   from '../../components/CaptureField';
 import { InfoBanner }                     from '../../components/InfoBanner';
 import { WizardFooter }                   from '../../components/WizardFooter';
 import { Icon }                           from '../../components/Icon';
+import { useSiDraftStore, Vehicle }       from '../../stores/siDraftStore';
+import { analyzeVin, isVinDisplayable, extractVins } from '../../utils/vinAnalyzer';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STEPS = ['Destination', 'Container', 'Parties', 'Cargo', 'Notify', 'Review'];
 
-type Vehicle = { id: string; vin: string; notes: string };
+type FieldStatus = { state: 'valid' | 'invalid' | 'warning'; message: string } | undefined;
 
-let nextId = 3;
+/** Map a VIN's analysis to a CaptureField status line. */
+function vinStatusFor(raw: string): FieldStatus {
+  if (!raw.trim()) return undefined;
+  const a = analyzeVin(raw);
+  if (!a.lengthOk) {
+    return { state: 'invalid', message: `${a.vin.length}/17 characters` };
+  }
+  if (a.invalidChars.length > 0) {
+    return { state: 'invalid', message: `Illegal character ${a.invalidChars.join(', ')} — try I→1, O→0, Q→0` };
+  }
+  // Length + alphabet OK. Checksum failure is a warning, not a hard reject (§2.3).
+  if (a.checkDigitValid === false) {
+    return { state: 'warning', message: `Checksum off — expected ${a.expectedCheckDigit}. ${a.regionAndCountry}` };
+  }
+  return { state: 'valid', message: `${a.regionAndCountry} · ${a.modelYear}` };
+}
 
 // ─── VehicleCard ──────────────────────────────────────────────────────────────
 
@@ -66,6 +83,9 @@ function VehicleCard({ index, vehicle, canRemove, onChange, onRemove }: Readonly
         onChangeText={vin => onChange({ vin })}
         placeholder="1HGCM82633A004352"
         helperText="17 characters. We verify format, theft (RCMP) and title (Carfax)."
+        status={vinStatusFor(vehicle.vin)}
+        parse={text => extractVins(text)[0] ?? null}
+        scanPrompt="Scan the VIN"
       />
 
       {/* Vehicle notes */}
@@ -96,24 +116,18 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>([
-    { id: '1', vin: '1HGCM82633A004352', notes: '' },
-    { id: '2', vin: '', notes: '' },
-  ]);
+  const vehicles      = useSiDraftStore(s => s.form.vehicles);
+  const siRef         = useSiDraftStore(s => s.form.ref);
+  const updateVehicle = useSiDraftStore(s => s.updateVehicle);
+  const removeVehicle = useSiDraftStore(s => s.removeVehicle);
+  const addVehicle    = useSiDraftStore(s => s.addVehicle);
 
   const styles = makeStyles(sp, typo);
 
-  function updateVehicle(id: string, patch: Partial<Vehicle>) {
-    setVehicles(vs => vs.map(v => (v.id === id ? { ...v, ...patch } : v)));
-  }
-  function removeVehicle(id: string) {
-    setVehicles(vs => vs.filter(v => v.id !== id));
-  }
-  function addVehicle() {
-    setVehicles(vs => [...vs, { id: String(nextId++), vin: '', notes: '' }]);
-  }
-
-  const allHaveVin = vehicles.every(v => v.vin.trim().length > 0);
+  // Every vehicle must carry a structurally-valid VIN (length + legal alphabet)
+  // before the checks can run. Checksum mismatches are surfaced as warnings, not
+  // blockers (§2.3), so they don't gate here.
+  const allHaveVin = vehicles.every(v => isVinDisplayable(analyzeVin(v.vin)));
 
   return (
     <KeyboardAvoidingView
@@ -122,7 +136,7 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
     >
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={siRef ?? 'New shipping instruction'}
         subtitle="Cargo · Vehicles"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}

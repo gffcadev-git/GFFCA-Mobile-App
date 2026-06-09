@@ -1,8 +1,10 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useColors, useSpacing, useTypography } from '../theme';
 import { AppInput } from './AppInput';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
+import { OcrCameraModal } from './OcrCameraModal';
+import { pickImageAndRecognize } from '../services/ocrService';
 
 type Props = Readonly<{
   /** Section heading shown above the capture buttons */
@@ -15,6 +17,16 @@ type Props = Readonly<{
   helperText?: string;
   /** Shows the green "Parsed from photo" badge once a value is present */
   parsedBadge?: boolean;
+  /** Live validation result shown as a coloured line under the input. */
+  status?: { state: 'valid' | 'invalid' | 'warning'; message: string };
+  /**
+   * Turns OCR text into the structured field value. Return null when nothing
+   * matched so the user is told to retry / type it. When omitted, the raw OCR
+   * text is used as-is.
+   */
+  parse?: (ocrText: string) => string | null;
+  /** Instruction shown over the camera frame, e.g. "Scan the VIN". */
+  scanPrompt?: string;
 }>;
 
 /**
@@ -24,7 +36,8 @@ type Props = Readonly<{
  * a value is present.
  */
 export function CaptureField({
-  label, required, value, onChangeText, placeholder, helperText, parsedBadge,
+  label, required, value, onChangeText, placeholder, helperText, parsedBadge, status,
+  parse, scanPrompt,
 }: Props) {
   const colors = useColors();
   const sp     = useSpacing();
@@ -32,6 +45,51 @@ export function CaptureField({
   const styles = makeStyles(sp, typo);
 
   const filled = value.trim().length > 0;
+
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  // Apply OCR text: parse to the structured value, else tell the user to retry.
+  const applyOcr = (text: string) => {
+    const parsed = parse ? parse(text) : text.trim();
+    if (parsed) {
+      setScanError(null);
+      onChangeText(parsed);
+    } else {
+      setScanError("Couldn't read a valid value — try again or type it below.");
+    }
+  };
+
+  const onUpload = async () => {
+    if (picking) return;
+    setScanError(null);
+    setPicking(true);
+    try {
+      const text = await pickImageAndRecognize();
+      if (text != null) applyOcr(text);
+    } catch {
+      setScanError('Could not read that image. Try another or type it below.');
+    } finally {
+      setPicking(false);
+    }
+  };
+
+  // Accent colour for the input border/text. When validation is supplied it
+  // wins; otherwise fall back to "green once filled".
+  const stateColors = {
+    valid:   colors.success.main,
+    invalid: colors.error.main,
+    warning: colors.warning.main,
+  };
+  const stateIcons: Record<'valid' | 'invalid' | 'warning', IconName> = {
+    valid:   'check',
+    invalid: 'alert-circle-outline',
+    warning: 'alert-outline',
+  };
+  let accentColor: string | undefined;
+  if (status) accentColor = stateColors[status.state];
+  else if (filled) accentColor = colors.success.main;
 
   return (
     <View style={styles.section}>
@@ -46,6 +104,8 @@ export function CaptureField({
         <TouchableOpacity
           style={[styles.captureBtn, { backgroundColor: colors.background.paper, borderColor: colors.border }]}
           activeOpacity={0.75}
+          onPress={() => { setScanError(null); setCameraOpen(true); }}
+          disabled={picking}
         >
           <Icon name="camera-outline" size={22} color={colors.text.primary} />
           <Text style={[styles.captureBtnTitle, { color: colors.text.primary }]}>Take photo</Text>
@@ -55,12 +115,26 @@ export function CaptureField({
         <TouchableOpacity
           style={[styles.captureBtn, { backgroundColor: colors.background.paper, borderColor: colors.border }]}
           activeOpacity={0.75}
+          onPress={onUpload}
+          disabled={picking}
         >
-          <Icon name="tray-arrow-up" size={22} color={colors.text.primary} />
+          {picking
+            ? <ActivityIndicator color={colors.text.primary} />
+            : <Icon name="tray-arrow-up" size={22} color={colors.text.primary} />}
           <Text style={[styles.captureBtnTitle, { color: colors.text.primary }]}>Upload image</Text>
-          <Text style={[styles.captureBtnSub,   { color: colors.text.secondary }]}>From gallery</Text>
+          <Text style={[styles.captureBtnSub,   { color: colors.text.secondary }]}>
+            {picking ? 'Reading…' : 'From gallery'}
+          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Scan failure hint */}
+      {!!scanError && (
+        <View style={styles.statusRow}>
+          <Icon name="alert-outline" size={13} color={colors.warning.main} />
+          <Text style={[styles.statusText, { color: colors.warning.main }]}>{scanError}</Text>
+        </View>
+      )}
 
       {/* Manual input divider */}
       <View style={styles.dividerRow}>
@@ -77,9 +151,19 @@ export function CaptureField({
         value={value}
         onChangeText={onChangeText}
         helperText={helperText}
-        style={{ color: filled ? colors.success.main : colors.text.primary }}
-        inputContainerStyle={filled ? { borderColor: colors.success.main } : undefined}
+        style={{ color: accentColor ?? colors.text.primary }}
+        inputContainerStyle={accentColor ? { borderColor: accentColor } : undefined}
       />
+
+      {/* Validation status line */}
+      {!!status && filled && (
+        <View style={styles.statusRow}>
+          <Icon name={stateIcons[status.state]} size={13} color={stateColors[status.state]} />
+          <Text style={[styles.statusText, { color: stateColors[status.state] }]}>
+            {status.message}
+          </Text>
+        </View>
+      )}
 
       {/* "Parsed from photo" badge */}
       {!!parsedBadge && filled && (
@@ -95,6 +179,14 @@ export function CaptureField({
           </Text>
         </View>
       )}
+
+      {/* Camera capture sheet */}
+      <OcrCameraModal
+        visible={cameraOpen}
+        prompt={scanPrompt ?? `Scan the ${label.toLowerCase()}`}
+        onClose={() => setCameraOpen(false)}
+        onCapture={applyOcr}
+      />
     </View>
   );
 }
@@ -141,6 +233,9 @@ function makeStyles(
     },
     dividerLine: { flex: 1, height: 1 },
     dividerText: { fontSize: typo.fontSize.xs },
+
+    statusRow:  { flexDirection: 'row', alignItems: 'center', gap: sp.xxs, marginTop: -sp.xs, marginBottom: sp.xs },
+    statusText: { fontSize: typo.fontSize.xs, fontWeight: typo.fontWeight.medium, flex: 1 },
 
     parsedRow:  { flexDirection: 'row', alignItems: 'center', gap: sp.sm, marginTop: -sp.xs },
     parsedBadge: {

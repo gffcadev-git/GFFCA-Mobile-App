@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +18,7 @@ import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { SavedOptionRow }             from '../../components/SavedOptionRow';
 import { InfoBanner }                 from '../../components/InfoBanner';
 import { WizardFooter }               from '../../components/WizardFooter';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,16 +37,13 @@ export function NewShippingStep5Screen({ navigation }: Readonly<NewShippingStep5
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const [name,  setName]  = useState('Freight Logistics JA');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const form    = useSiDraftStore(s => s.form);
+  const setForm = useSiDraftStore(s => s.setForm);
 
   const styles = makeStyles(sp, typo);
 
   function fillFromSaved(party: typeof SAVED_PARTIES[0]) {
-    setName(party.name);
-    setPhone(party.phone);
-    setEmail(party.email);
+    setForm({ notifyName: party.name, notifyPhone: party.phone, notifyEmail: party.email });
   }
 
   return (
@@ -55,7 +53,7 @@ export function NewShippingStep5Screen({ navigation }: Readonly<NewShippingStep5
     >
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={form.ref ?? 'New shipping instruction'}
         subtitle="Notify party"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -93,23 +91,23 @@ export function NewShippingStep5Screen({ navigation }: Readonly<NewShippingStep5
         <AppInput
           label="Name"
           placeholder="Notify party name"
-          value={name}
-          onChangeText={setName}
+          value={form.notifyName}
+          onChangeText={t => setForm({ notifyName: t })}
         />
         <AppInput
           label="Phone"
           placeholder="Notify party phone"
           keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
+          value={form.notifyPhone}
+          onChangeText={t => setForm({ notifyPhone: t })}
         />
         <AppInput
           label="Email"
           placeholder="Notify party email"
           keyboardType="email-address"
           autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
+          value={form.notifyEmail}
+          onChangeText={t => setForm({ notifyEmail: t })}
         />
 
         {/* Skip link */}

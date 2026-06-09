@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { NewShippingStep4Props }      from '../../navigation/types';
@@ -10,6 +10,7 @@ import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { SelectableCard }             from '../../components/SelectableCard';
 import { WizardFooter }               from '../../components/WizardFooter';
 import { IconName }                   from '../../components/Icon';
+import { useSiDraftStore }            from '../../stores/siDraftStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,9 @@ export function NewShippingStep4Screen({ navigation }: Readonly<NewShippingStep4
   const typo   = useTypography();
   const insets = useSafeAreaInsets();
 
-  const [selectedId, setSelectedId] = useState<string>('auto');
+  const selectedId = useSiDraftStore(s => s.form.cargoTypeId);
+  const setForm    = useSiDraftStore(s => s.setForm);
+  const siRef      = useSiDraftStore(s => s.form.ref);
 
   const styles    = makeStyles(sp, typo);
   const selected  = CARGO_TYPES.find(c => c.id === selectedId);
@@ -57,7 +60,7 @@ export function NewShippingStep4Screen({ navigation }: Readonly<NewShippingStep4
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={siRef ?? 'New shipping instruction'}
         subtitle="Cargo"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}
@@ -84,7 +87,7 @@ export function NewShippingStep4Screen({ navigation }: Readonly<NewShippingStep4
             title={cargo.title}
             subtitle={cargo.subtitle}
             selected={cargo.id === selectedId}
-            onPress={() => setSelectedId(cargo.id)}
+            onPress={() => setForm({ cargoTypeId: cargo.id })}
           />
         ))}
       </ScrollView>
