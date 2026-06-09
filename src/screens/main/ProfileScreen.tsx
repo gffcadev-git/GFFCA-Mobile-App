@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
   ScrollView,
@@ -17,6 +17,8 @@ import { SettingsRow }                    from '../../components/SettingsRow';
 import { TabHeader }                      from '../../components/TabHeader';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 import { useBiometrics }                  from '../../services/biometrics';
+import { enrollBiometric, disableBiometric, hasBiometricLogin } from '../../services/biometricCredentials';
+import { useAuthStore }                    from '../../stores/authStore';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -31,29 +33,39 @@ export function ProfileScreen() {
   const styles     = makeStyles(sp, typo);
 
   const { methods, authenticate } = useBiometrics();
+  const refreshToken              = useAuthStore(s => s.refreshToken);
 
-  // One enabled-state per biometric method shown on this platform.
-  const [fingerprintOn, setFingerprintOn] = useState(false);
-  const [faceIdOn,      setFaceIdOn]       = useState(false);
+  // Single source of truth: whether a biometric login credential is enrolled in
+  // the Keychain. Both platform rows (Face ID / fingerprint) reflect this one
+  // entry, since the OS scan unlocks the same stored credential.
+  const [bioEnabled, setBioEnabled] = useState(false);
+  useEffect(() => {
+    hasBiometricLogin().then(setBioEnabled);
+  }, []);
 
-  const methodState: Record<'fingerprint' | 'faceid', { value: boolean; set: (v: boolean) => void }> = {
-    fingerprint: { value: fingerprintOn, set: setFingerprintOn },
-    faceid:      { value: faceIdOn,      set: setFaceIdOn },
-  };
-
-  // Enabling requires a successful biometric scan; disabling is immediate.
-  async function toggleBiometric(method: 'fingerprint' | 'faceid', next: boolean) {
-    const { set } = methodState[method];
+  // Enabling stores the current refresh token behind the biometric sensor;
+  // disabling clears that entry.
+  async function toggleBiometric(next: boolean) {
     if (!next) {
-      set(false);
+      await disableBiometric();
+      setBioEnabled(false);
       return;
     }
-    const label = method === 'faceid' ? 'Face ID' : 'fingerprint';
-    const ok = await authenticate(`Confirm ${label} to enable biometric sign-in`);
-    if (ok) {
-      set(true);
-    } else {
-      Alert.alert('Could not enable', `${label} verification was not completed.`);
+    if (!refreshToken) {
+      Alert.alert('Not available', 'Please sign in again before enabling biometric sign-in.');
+      return;
+    }
+    // Prove the user can pass biometrics before we rely on it for sign-in.
+    const ok = await authenticate('Confirm to enable biometric sign-in');
+    if (!ok) {
+      Alert.alert('Could not enable', 'Biometric verification was not completed.');
+      return;
+    }
+    try {
+      await enrollBiometric(refreshToken);
+      setBioEnabled(true);
+    } catch {
+      Alert.alert('Could not enable', 'Unable to securely store your biometric login.');
     }
   }
 
@@ -101,8 +113,8 @@ export function ProfileScreen() {
               icon={method === 'faceid' ? 'face-recognition' : 'fingerprint'}
               label={method === 'faceid' ? 'Face ID' : 'Biometric'}
               toggle={{
-                value:         methodState[method].value,
-                onValueChange: next => toggleBiometric(method, next),
+                value:         bioEnabled,
+                onValueChange: toggleBiometric,
               }}
             />
           ))}

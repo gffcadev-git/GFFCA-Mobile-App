@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -19,6 +19,7 @@ import { Icon }               from '../../components/Icon';
 import { useBiometrics, BiometricMethod } from '../../services/biometrics';
 import { api, type ApiError }  from '../../apiCall';
 import { useAuthStore }        from '../../stores/authStore';
+import { biometricRefreshToken, hasBiometricLogin, disableBiometric } from '../../services/biometricCredentials';
 
 export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const colors = useColors();
@@ -31,8 +32,15 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
 
-  const { methods, authenticate } = useBiometrics();
-  const signIn = useAuthStore((s) => s.signIn);
+  const { methods, available } = useBiometrics();
+  const signIn    = useAuthStore((s) => s.signIn);
+  const setTokens = useAuthStore((s) => s.setTokens);
+
+  // Whether a biometric login credential has been enrolled in the Keychain.
+  const [bioEnrolled, setBioEnrolled] = useState(false);
+  useEffect(() => {
+    hasBiometricLogin().then(setBioEnrolled);
+  }, []);
 
   async function handleSignIn() {
     if (!email.trim() || !password) {
@@ -56,13 +64,39 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   }
 
   async function handleBiometric(method: BiometricMethod) {
+    if (loading) return;
+    // Sensor is present but nothing is enrolled yet — point the user to Profile.
+    if (!bioEnrolled) {
+      Alert.alert(
+        'Biometric sign-in not set up',
+        'Sign in with your password first, then turn on biometric sign-in from Profile.',
+      );
+      return;
+    }
     const label = method === 'faceid' ? 'Face ID' : 'fingerprint';
-    const ok = await authenticate(`Sign in with ${label}`);
-    if (ok) {
-      // TODO: exchange the biometric result for a session token, then route
-      handleSignIn();
-    } else {
-      Alert.alert('Authentication failed', `Could not verify ${label}. Please try again or use your password.`);
+    setLoading(true);
+    try {
+      // Reading the biometric-gated Keychain entry triggers the OS prompt and
+      // returns the stored refresh token only on a successful scan.
+      const storedRefresh = await biometricRefreshToken(`Sign in with ${label}`);
+      if (!storedRefresh) return; // cancelled or scan failed — stay on the form
+
+      // Exchange it for a fresh session, then establish the signed-in state.
+      // setTokens first so the axios interceptor authorises the me() request.
+      const { accessToken } = await api.auth.refresh(storedRefresh);
+      await setTokens({ token: accessToken, refreshToken: storedRefresh });
+      const user = await api.auth.me();
+      await signIn({ token: accessToken, refreshToken: storedRefresh, user });
+    } catch {
+      // Refresh token expired/revoked — drop the stale entry and fall back to password.
+      await disableBiometric();
+      setBioEnrolled(false);
+      Alert.alert(
+        'Biometric sign-in expired',
+        'Please sign in with your password. You can re-enable it from your profile.',
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -123,34 +157,40 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
           />
         </View>
 
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={[styles.line, { backgroundColor: colors.divider }]} />
-          <Text style={[styles.orText, { color: colors.text.secondary }]}>or</Text>
-          <View style={[styles.line, { backgroundColor: colors.divider }]} />
-        </View>
+        {/* Biometric sign-in — shown whenever the sensor exists; tapping before
+            enrolment nudges the user to set it up in Profile */}
+        {available && (
+          <>
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={[styles.line, { backgroundColor: colors.divider }]} />
+              <Text style={[styles.orText, { color: colors.text.secondary }]}>or</Text>
+              <View style={[styles.line, { backgroundColor: colors.divider }]} />
+            </View>
 
-        {/* Biometric buttons — iOS shows Face ID only, Android shows both */}
-        <View style={styles.biometricRow}>
-          {methods.map((method, index) => (
-            <React.Fragment key={method}>
-              {index > 0 && <View style={styles.biometricGap} />}
-              <AppButton
-                title={method === 'faceid' ? 'Face ID' : 'Fingerprint'}
-                variant="outline"
-                style={styles.biometricBtn}
-                icon={
-                  <Icon
-                    name={method === 'faceid' ? 'face-recognition' : 'fingerprint'}
-                    size={18}
-                    color={colors.text.primary}
+            {/* Biometric buttons — iOS shows Face ID only, Android shows both */}
+            <View style={styles.biometricRow}>
+              {methods.map((method, index) => (
+                <React.Fragment key={method}>
+                  {index > 0 && <View style={styles.biometricGap} />}
+                  <AppButton
+                    title={method === 'faceid' ? 'Face ID' : 'Fingerprint'}
+                    variant="outline"
+                    style={styles.biometricBtn}
+                    icon={
+                      <Icon
+                        name={method === 'faceid' ? 'face-recognition' : 'fingerprint'}
+                        size={18}
+                        color={colors.text.primary}
+                      />
+                    }
+                    onPress={() => handleBiometric(method)}
                   />
-                }
-                onPress={() => handleBiometric(method)}
-              />
-            </React.Fragment>
-          ))}
-        </View>
+                </React.Fragment>
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Footer */}
         <View
