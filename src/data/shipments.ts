@@ -33,6 +33,15 @@ export type Shipment = {
   booking:      string;
   /** Present when the shipment needs the user to act — drives the alert banner */
   actionNeeded?: string;
+
+  // ── Detail-only fields (from GET /shipping-instructions/{id}) ──
+  /** Origin "City, Country" — shown until a resolved destination is available */
+  origin?:        string;
+  transportMode?: string;
+  /** Numeric totals arrive as decimal strings (e.g. "0.00") */
+  totalPackages?: string;
+  totalWeightKg?: string;
+  totalValueCad?: string;
 };
 
 export const SHIPMENTS: Shipment[] = [

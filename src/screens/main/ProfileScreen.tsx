@@ -19,6 +19,9 @@ import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 import { useBiometrics }                  from '../../services/biometrics';
 import { enrollBiometric, disableBiometric, hasBiometricLogin } from '../../services/biometricCredentials';
 import { useAuthStore }                    from '../../stores/authStore';
+import { useDraftStore }                   from '../../stores/draftStore';
+import { api }                             from '../../apiCall';
+import { queryClient, queryPersister }     from '../../services/queryClient';
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -34,6 +37,7 @@ export function ProfileScreen() {
 
   const { methods, authenticate } = useBiometrics();
   const refreshToken              = useAuthStore(s => s.refreshToken);
+  const signOut                   = useAuthStore(s => s.signOut);
 
   // Single source of truth: whether a biometric login credential is enrolled in
   // the Keychain. Both platform rows (Face ID / fingerprint) reflect this one
@@ -69,6 +73,27 @@ export function ProfileScreen() {
     }
   }
 
+  // Full sign-out: best-effort server revoke, then wipe every local trace —
+  // session + biometric tokens, saved drafts, and the cached API data.
+  async function handleSignOut() {
+    try {
+      await api.auth.logout();              // revoke server-side; ignore offline / already-expired
+    } catch {
+      // best-effort — proceed with local teardown regardless
+    }
+    await signOut({ wipeBiometric: true }); // clears Keychain session + biometric tokens, flips auth state
+    useDraftStore.getState().clear();       // drop saved shipping drafts (gffca-drafts)
+    queryClient.clear();                    // drop in-memory React Query cache
+    await queryPersister.removeClient();    // drop persisted cache (gffca-react-query-cache)
+  }
+
+  function confirmSignOut() {
+    Alert.alert('Sign out', "You'll need to sign in again to use the app.", [
+      { text: 'Cancel',   style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: handleSignOut },
+    ]);
+  }
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       <TabHeader
@@ -91,6 +116,12 @@ export function ProfileScreen() {
             <Text style={[styles.profileName, { color: colors.text.primary }]}>Acme Exports Inc.</Text>
             <Text style={[styles.profileRole, { color: colors.text.secondary }]}>James O. · Operations</Text>
           </View>
+        </View>
+
+        {/* Shipping group */}
+        <Text style={[styles.sectionHeading, { color: colors.text.secondary }]}>SHIPPING</Text>
+        <View style={[styles.group, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
+          <SettingsRow icon="pencil-outline" label="Draft Shipping Instructionss" onPress={() => navigation.navigate('DraftShippingInstructions')} isLast />
         </View>
 
         {/* Company profile group */}
@@ -123,7 +154,7 @@ export function ProfileScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOut} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.signOut} activeOpacity={0.7} onPress={confirmSignOut}>
           <Text style={[styles.signOutText, { color: colors.error.main }]}>Sign out</Text>
         </TouchableOpacity>
       </ScrollView>

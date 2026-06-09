@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandMMKVStorage } from '../services/storage';
 import { saveTokens, loadTokens, clearTokens } from '../services/secureTokens';
+import { disableBiometric } from '../services/biometricCredentials';
 
 /** Authenticated user as returned by the auth API. */
 export type AuthUser = {
@@ -35,7 +36,7 @@ type AuthState = {
   isHydrated: boolean;
 
   signIn: (session: AuthSession) => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (opts?: { wipeBiometric?: boolean }) => Promise<void>;
   /** Update tokens after a refresh, keeping the Keychain in sync. */
   setTokens: (tokens: { token: string; refreshToken: string }) => Promise<void>;
   /** Load tokens from the secure store into memory on app launch. */
@@ -56,8 +57,12 @@ export const useAuthStore = create<AuthState>()(
         set({ token, refreshToken, user, isAuthenticated: true });
       },
 
-      signOut: async () => {
+      signOut: async ({ wipeBiometric = false } = {}) => {
         await clearTokens();
+        // Explicit user sign-out also removes the biometric-stored refresh token.
+        // The involuntary 401 path leaves it, so an expired access token alone
+        // doesn't disable the convenience login.
+        if (wipeBiometric) await disableBiometric();
         set({ token: null, refreshToken: null, user: null, isAuthenticated: false });
       },
 

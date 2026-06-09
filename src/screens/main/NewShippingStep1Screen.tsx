@@ -25,7 +25,7 @@ const STEPS = ['Destination', 'Container', 'Parties', 'Cargo', 'Notify', 'Review
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-export function NewShippingStep1Screen({ navigation }: Readonly<NewShippingStep1Props>) {
+export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippingStep1Props>) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
@@ -48,9 +48,9 @@ export function NewShippingStep1Screen({ navigation }: Readonly<NewShippingStep1
       style={[styles.root, { backgroundColor: colors.background.default }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Header */}
+      {/* Header — show the SI id when resuming a draft, else the create title. */}
       <ScreenHeader
-        title="New shipping instruction"
+        title={route.params?.ref ?? 'New shipping instruction'}
         subtitle="Destination & booking"
         onBack={() => navigation.goBack()}
         rightElement={<SaveDraftButton />}

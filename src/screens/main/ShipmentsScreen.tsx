@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets }              from 'react-native-safe-area-context';
 import { useNavigation }                  from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,19 +9,21 @@ import { TabHeader }                      from '../../components/TabHeader';
 import { FilterChips }                    from '../../components/FilterChips';
 import { Badge }                          from '../../components/Badge';
 import { Icon }                           from '../../components/Icon';
+import { AppButton }                      from '../../components/AppButton';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
 import { SHIPMENT_STATUS_TONE, Shipment } from '../../data/shipments';
 import { useShipments } from '../../hooks/useShipments';
 
 // ─── Filters ──────────────────────────────────────────────────────────────────
 
-const FILTERS = ['All', 'Action needed', 'Under review', 'Submitted'];
+const FILTERS = ['All', 'Action needed', 'Under review', 'Submitted', 'Draft'];
 
 function matchesFilter(s: Shipment, filter: string): boolean {
   switch (filter) {
     case 'Action needed': return s.status === 'Pending you';
     case 'Under review':  return s.status === 'Under review';
     case 'Submitted':     return s.status === 'Submitted';
+    case 'Draft':         return s.status === 'Draft';
     default:              return true;
   }
 }
@@ -68,20 +70,51 @@ function ShipmentCard({ data, onPress }: Readonly<{ data: Shipment; onPress: () 
 export function ShipmentsScreen() {
   const colors     = useColors();
   const sp         = useSpacing();
+  const typo       = useTypography();
   const insets     = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const styles     = makeStyles(sp);
+  const styles     = makeStyles(sp, typo);
 
-  const { data: shipments = [] } = useShipments();
+  const { data: shipments = [], isLoading, isError, refetch } = useShipments();
   const [filter, setFilter] = useState('All');
+  // Show every SI here — including drafts. "All" lists everything; "Draft" isolates them.
   const visible = shipments.filter(s => matchesFilter(s, filter));
 
   function openShipment(s: Shipment) {
+    // Drafts resume in the multi-step SI form; everything else opens its detail.
     if (s.status === 'Draft') {
-      navigation.navigate('DraftShippingInstructions');
-    } else {
-      navigation.navigate('ShipmentDetail', { ref: s.ref });
+      navigation.navigate('NewShippingStep1', { ref: s.ref });
+      return;
     }
+    navigation.navigate('ShipmentDetail', { id: s.id, ref: s.ref });
+  }
+
+  function renderBody() {
+    if (isLoading) {
+      return (
+        <View style={styles.state}>
+          <ActivityIndicator color={colors.primary.main} />
+        </View>
+      );
+    }
+    if (isError) {
+      return (
+        <View style={styles.state}>
+          <Text style={[styles.stateText, { color: colors.text.secondary }]}>Couldn't load shipments.</Text>
+          <AppButton title="Retry" variant="outline" onPress={() => refetch()} style={styles.retryBtn} />
+        </View>
+      );
+    }
+    if (visible.length === 0) {
+      return (
+        <View style={styles.state}>
+          <Text style={[styles.stateText, { color: colors.text.secondary }]}>No shipments to show.</Text>
+        </View>
+      );
+    }
+    return visible.map(s => (
+      <ShipmentCard key={s.id} data={s} onPress={() => openShipment(s)} />
+    ));
   }
 
   return (
@@ -101,9 +134,7 @@ export function ShipmentsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {visible.map(s => (
-          <ShipmentCard key={s.id} data={s} onPress={() => openShipment(s)} />
-        ))}
+        {renderBody()}
       </ScrollView>
 
       <BottomNavBar activeTab="Shipments" messageBadge={2} />
@@ -137,9 +168,15 @@ function makeCardStyles(
   });
 }
 
-function makeStyles(sp: ReturnType<typeof useSpacing>) {
+function makeStyles(
+  sp:   ReturnType<typeof useSpacing>,
+  typo: ReturnType<typeof useTypography>,
+) {
   return StyleSheet.create({
-    root:   { flex: 1 },
-    scroll: { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.sm },
+    root:      { flex: 1 },
+    scroll:    { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.sm },
+    state:     { alignItems: 'center', paddingTop: sp.xxl, gap: sp.md },
+    stateText: { fontSize: typo.fontSize.base },
+    retryBtn:  { minWidth: 140 },
   });
 }

@@ -30,7 +30,8 @@ export type DashboardTabProps = BottomTabScreenProps<MainTabParamList, 'Dashboar
 
 export type MainStackParamList = {
   Tabs:                 undefined;
-  NewShippingStep1:     undefined;
+  /** `ref` is set when resuming a draft SI — drives the header title. */
+  NewShippingStep1:     { ref?: string } | undefined;
   NewShippingStep2:     undefined;
   NewShippingStep3:     undefined;
   NewShippingStep4:     undefined;
@@ -46,7 +47,8 @@ export type MainStackParamList = {
   TaxCompliance:        undefined;
   Preferences:          undefined;
   DraftShippingInstructions: undefined;
-  ShipmentDetail:       { ref: string };
+  /** `id` drives the detail fetch; `ref` (SI number) shows instantly in the header. */
+  ShipmentDetail:       { id: string; ref?: string };
 };
 
 export type NewShippingStep1Props = NativeStackScreenProps<MainStackParamList, 'NewShippingStep1'>;

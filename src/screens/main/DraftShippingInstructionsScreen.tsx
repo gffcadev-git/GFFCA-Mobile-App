@@ -123,7 +123,7 @@ export function DraftShippingInstructionsScreen({ navigation }: Readonly<DraftSh
           <DraftCard
             key={d.id}
             data={d}
-            onResume={() => navigation.navigate('NewShippingStep1')}
+            onResume={() => navigation.navigate('NewShippingStep1', { ref: d.ref })}
             onDiscard={() => setDrafts(ds => ds.filter(x => x.id !== d.id))}
           />
         ))}

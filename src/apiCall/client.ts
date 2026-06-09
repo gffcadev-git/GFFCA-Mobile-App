@@ -6,7 +6,8 @@ import axios, {
 } from 'axios';
 import { ENV } from '../config/env';
 import { useAuthStore } from '../stores/authStore';
-import { normalizeError } from './types';
+import { ENDPOINTS } from './endpoints';
+import { ApiEnvelope, normalizeError } from './types';
 
 /**
  * Single shared Axios instance. Every API method in `apiCall/*.api.ts`
@@ -20,6 +21,48 @@ export const httpClient: AxiosInstance = axios.create({
     Accept: 'application/json',
   },
 });
+
+// ─── Silent access-token refresh ──────────────────────────────────────────────
+// The access token is short-lived (~15 min). When a request comes back 401 we
+// swap it for a fresh one using the refresh token and replay the request, so the
+// user never sees a login screen mid-session.
+
+/** Requests config gets a private flag so we only retry a given request once. */
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+/**
+ * Holds the in-flight refresh so a burst of concurrent 401s triggers exactly
+ * one /auth/refresh call; every waiting request resolves off the same promise.
+ */
+let refreshPromise: Promise<string | null> | null = null;
+
+/**
+ * Exchange the refresh token for a new access token via a *bare* axios call —
+ * deliberately not `httpClient`, so it skips these interceptors (no recursion,
+ * no stale bearer header) — then persist it. Resolves to the new access token,
+ * or `null` when the refresh token is itself expired/invalid.
+ */
+async function runRefresh(refreshToken: string): Promise<string | null> {
+  try {
+    const res = await axios.post<ApiEnvelope<{ accessToken: string; refreshToken?: string }>>(
+      `${ENV.API_BASE_URL}${ENDPOINTS.auth.refresh}`,
+      { refreshToken },
+      {
+        timeout: ENV.API_TIMEOUT,
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      },
+    );
+    const { accessToken, refreshToken: rotated } = res.data.data;
+    // Keep the rotated refresh token if the backend issued one; otherwise reuse.
+    await useAuthStore.getState().setTokens({
+      token: accessToken,
+      refreshToken: rotated ?? refreshToken,
+    });
+    return accessToken;
+  } catch {
+    return null;
+  }
+}
 
 // ─── Request interceptor — runs BEFORE every request leaves the app ───────────
 httpClient.interceptors.request.use(
@@ -46,10 +89,30 @@ httpClient.interceptors.response.use(
     }
     return response;
   },
-  (error: AxiosError) => {
-    // Auth expired/invalid → sign the user out so the app routes to SignIn
-    if (error.response?.status === 401) {
-      useAuthStore.getState().signOut();
+  async (error: AxiosError) => {
+    const original = error.config as RetriableConfig | undefined;
+
+    if (error.response?.status === 401 && original && !original._retry) {
+      const { token, refreshToken } = useAuthStore.getState();
+
+      if (refreshToken) {
+        original._retry = true;
+        // Collapse concurrent 401s into a single refresh round-trip.
+        refreshPromise ??= runRefresh(refreshToken).finally(() => { refreshPromise = null; });
+        const newToken = await refreshPromise;
+
+        if (newToken) {
+          // Replay the original request with the freshly minted token.
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return httpClient(original);
+        }
+        // Refresh token is expired/invalid too → the session is truly over.
+        await useAuthStore.getState().signOut();
+      } else if (token) {
+        // Authenticated but nothing to refresh with → sign out, route to SignIn.
+        await useAuthStore.getState().signOut();
+      }
+      // else: not signed in (e.g. a failed login) — just surface the error.
     }
 
     if (__DEV__) {

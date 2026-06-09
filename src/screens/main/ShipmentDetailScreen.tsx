@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets }    from 'react-native-safe-area-context';
 import { ShipmentDetailProps }  from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -8,12 +8,25 @@ import { AppButton }            from '../../components/AppButton';
 import { Badge }                from '../../components/Badge';
 import { DetailGroup }          from '../../components/DetailGroup';
 import { Icon }                 from '../../components/Icon';
+import { useShipmentDetail }    from '../../hooks/useShipments';
 import {
-  getShipmentByRef,
   getShipmentTimeline,
   SHIPMENT_STATUS_TONE,
   TimelineStep,
 } from '../../data/shipments';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Falls back to an em dash for empty/missing values. */
+function dash(value: string | undefined | null): string {
+  return value?.trim() ? value : '—';
+}
+
+/** Package totals arrive as decimal strings ("0.00") — show a clean count. */
+function formatCount(value: string | undefined): string {
+  const n = Number(value);
+  return Number.isFinite(n) && value != null ? String(n) : '—';
+}
 
 // ─── StatusTimeline ───────────────────────────────────────────────────────────
 
@@ -68,13 +81,26 @@ export function ShipmentDetailScreen({ navigation, route }: Readonly<ShipmentDet
   const insets = useSafeAreaInsets();
   const styles = makeStyles(sp, typo);
 
-  const shipment = getShipmentByRef(route.params.ref);
+  const { id, ref } = route.params;
+  const { data: shipment, isLoading, isError, refetch } = useShipmentDetail(id);
 
-  // Defensive fallback — should not happen via normal navigation
-  if (!shipment) {
+  // Loading / error states — header keeps the SI number from the list params.
+  if (isLoading || isError || !shipment) {
     return (
       <View style={[styles.root, { backgroundColor: colors.background.default }]}>
-        <ScreenHeader title={route.params.ref} titleAlign="left" onBack={() => navigation.goBack()} />
+        <ScreenHeader title={ref ?? ''} titleAlign="left" onBack={() => navigation.goBack()} />
+        <View style={styles.state}>
+          {isLoading ? (
+            <ActivityIndicator color={colors.primary.main} />
+          ) : (
+            <>
+              <Text style={[styles.stateText, { color: colors.text.secondary }]}>
+                Couldn't load this shipment.
+              </Text>
+              <AppButton title="Retry" variant="outline" onPress={() => refetch()} style={styles.retryBtn} />
+            </>
+          )}
+        </View>
       </View>
     );
   }
@@ -119,10 +145,13 @@ export function ShipmentDetailScreen({ navigation, route }: Readonly<ShipmentDet
           heading="SUMMARY"
           dividers={false}
           rows={[
-            { label: 'Destination', value: shipment.destination },
-            { label: 'Cargo',       value: shipment.cargo },
-            { label: 'Carrier',     value: shipment.carrier },
-            { label: 'Booking',     value: shipment.booking },
+            { label: 'Origin',         value: dash(shipment.origin ?? shipment.destination) },
+            { label: 'Transport mode', value: dash(shipment.transportMode) },
+            { label: 'Booking',        value: dash(shipment.booking) },
+            { label: 'Cargo',          value: dash(shipment.cargo) },
+            { label: 'Packages',       value: formatCount(shipment.totalPackages) },
+            { label: 'Total weight',   value: shipment.totalWeightKg ? `${shipment.totalWeightKg} kg` : '—' },
+            { label: 'Total value',    value: shipment.totalValueCad ? `CAD ${shipment.totalValueCad}` : '—' },
           ]}
         />
 
@@ -182,6 +211,10 @@ function makeStyles(
   return StyleSheet.create({
     root:   { flex: 1 },
     scroll: { paddingHorizontal: sp.screenHorizontal, paddingTop: sp.md },
+
+    state:     { flex: 1, alignItems: 'center', justifyContent: 'center', gap: sp.md, padding: sp.xl },
+    stateText: { fontSize: typo.fontSize.base },
+    retryBtn:  { minWidth: 140 },
 
     alert: {
       flexDirection: 'row',

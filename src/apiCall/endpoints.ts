@@ -10,10 +10,10 @@ export const ENDPOINTS = {
     me:      '/auth/me',
   },
   shipments: {
-    list:   '/shipments',
-    detail: (ref: string) => `/shipments/${ref}`,
-    create: '/shipments',
-    drafts: '/shipments/drafts',
+    list:   '/shipping-instructions',
+    detail: (id: string) => `/shipping-instructions/${id}`,
+    create: '/shipping-instructions',
+    drafts: '/shipping-instructions?status=draft',
   },
   notifications: {
     list:        '/notifications',
