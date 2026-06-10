@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Vibration,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +18,7 @@ import {
 } from 'react-native-vision-camera';
 import { useColors, useSpacing, useTypography } from '../theme';
 import { Icon } from './Icon';
-import { recognizeImageText } from '../services/ocrService';
+import { recognizeImageText, withTimeout } from '../services/ocrService';
 
 type Props = Readonly<{
   visible: boolean;
@@ -26,13 +27,25 @@ type Props = Readonly<{
   onClose: () => void;
   /** Called with the OCR text once a photo is captured and recognised. */
   onCapture: (text: string) => void;
+  /**
+   * When provided, the camera auto-scans: it silently photographs every
+   * ~1.5 s and locks onto the first frame whose text parses, so the user
+   * never sees a single bad frame as a failure. The shutter stays as a
+   * manual fallback.
+   */
+  parse?: (ocrText: string) => string | null;
 }>;
+
+/** Cadence of silent auto-scan captures while waiting for a parseable frame. */
+const AUTO_SCAN_INTERVAL_MS = 1500;
+/** A capture past this is wedged — give up on it so the scan loop stays alive. */
+const CAPTURE_TIMEOUT_MS = 10_000;
 
 /**
  * Full-screen camera that takes a photo and returns the recognised text.
  * Handles the permission flow itself; the caller just toggles `visible`.
  */
-export function OcrCameraModal({ visible, prompt, onClose, onCapture }: Props) {
+export function OcrCameraModal({ visible, prompt, onClose, onCapture, parse }: Props) {
   const colors = useColors();
   const sp     = useSpacing();
   const typo   = useTypography();
@@ -41,35 +54,76 @@ export function OcrCameraModal({ visible, prompt, onClose, onCapture }: Props) {
 
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
-  const photoOutput = usePhotoOutput({ qualityPrioritization: 'speed' });
+  const photoOutput = usePhotoOutput({ qualityPrioritization: 'balanced' });
 
   const [busy, setBusy] = useState(false);
   const [denied, setDenied] = useState(false);
 
+  // One capture/OCR at a time (shared by the auto-scan loop and the shutter);
+  // locked once a value is accepted so late frames can't fire twice.
+  const capturingRef = useRef(false);
+  const lockedRef = useRef(false);
+
   // Ask for permission the first time the sheet opens.
   useEffect(() => {
     if (!visible) return;
+    lockedRef.current = false;
     if (hasPermission) { setDenied(false); return; }
     requestPermission().then(granted => setDenied(!granted));
   }, [visible, hasPermission, requestPermission]);
 
   const capture = async () => {
-    if (busy) return;
+    if (busy || capturingRef.current || lockedRef.current) return;
+    capturingRef.current = true;
     setBusy(true);
     try {
       const file = await photoOutput.capturePhotoToFile({ flashMode: 'off' }, {});
       const text = await recognizeImageText(file.filePath);
+      lockedRef.current = true;
       onCapture(text);
       onClose();
     } catch {
       // Non-destructive — let the user simply retry from the same sheet.
     } finally {
+      capturingRef.current = false;
       setBusy(false);
     }
   };
 
   const ready = hasPermission && !!device;
-  const cameraActive = visible && ready && !busy;
+  // Keep the session running while a capture is in flight — deactivating
+  // mid-capture aborts the photo.
+  const cameraActive = visible && ready;
+
+  // Auto-scan: silently photograph on an interval and stop on the first frame
+  // whose text parses. Failed frames are invisible — the loop just keeps going.
+  useEffect(() => {
+    if (!visible || !ready || !parse) return;
+    const tick = async () => {
+      if (capturingRef.current || lockedRef.current) return;
+      capturingRef.current = true;
+      try {
+        const file = await withTimeout(
+          photoOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false }, {}),
+          CAPTURE_TIMEOUT_MS,
+          'Photo capture',
+        );
+        if (lockedRef.current) return;
+        const text = await recognizeImageText(file.filePath);
+        if (lockedRef.current || !parse(text)) return;
+        lockedRef.current = true;
+        Vibration.vibrate(150);
+        onCapture(text);
+        onClose();
+      } catch {
+        // Bad frame — keep scanning.
+      } finally {
+        capturingRef.current = false;
+      }
+    };
+    const id = setInterval(tick, AUTO_SCAN_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [visible, ready, parse, photoOutput, onCapture, onClose]);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -104,6 +158,11 @@ export function OcrCameraModal({ visible, prompt, onClose, onCapture }: Props) {
           <View style={styles.overlay} pointerEvents="none">
             <View style={[styles.frame, { borderColor: colors.primary.contrastText }]} />
             {!!prompt && <Text style={styles.prompt}>{prompt}</Text>}
+            {!!parse && (
+              <Text style={styles.promptSub}>
+                Scanning automatically — hold steady, or use the shutter
+              </Text>
+            )}
           </View>
         )}
 
@@ -173,6 +232,13 @@ function makeStyles(
       color:             '#FFFFFF',
       fontSize:          typo.fontSize.md,
       fontWeight:        typo.fontWeight.semiBold,
+      textAlign:         'center',
+      paddingHorizontal: sp.lg,
+    },
+    promptSub: {
+      marginTop:         sp.xs,
+      color:             'rgba(255,255,255,0.85)',
+      fontSize:          typo.fontSize.sm,
       textAlign:         'center',
       paddingHorizontal: sp.lg,
     },

@@ -186,6 +186,7 @@ export function CaptureField({
         prompt={scanPrompt ?? `Scan the ${label.toLowerCase()}`}
         onClose={() => setCameraOpen(false)}
         onCapture={applyOcr}
+        parse={parse}
       />
     </View>
   );

@@ -4,7 +4,8 @@
  */
 export const ENV = {
   /** Base URL for all API calls — replace with the real backend. */
-  API_BASE_URL: 'http://localhost:3000/api',
+  // API_BASE_URL: 'http://localhost:3000/api',
+  API_BASE_URL: 'http://10.0.2.2:3000/api',  // android emulator localhost
   /** Default request timeout in ms. */
   API_TIMEOUT: 20000,
   /** Default tenant code sent with auth requests (hard-coded for now). */

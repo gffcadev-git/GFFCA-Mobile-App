@@ -13,9 +13,28 @@ function toUri(pathOrUri: string): string {
   return /^[a-z]+:\/\//i.test(pathOrUri) ? pathOrUri : `file://${pathOrUri}`;
 }
 
+/**
+ * Reject after `ms` so a wedged native call can't freeze the UI in a busy
+ * state forever — a late native result is simply ignored.
+ */
+export function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
+
+/** Recognition should take a few seconds; past this something is wedged. */
+const OCR_TIMEOUT_MS = 30_000;
+
 /** Run text recognition on a captured/selected image. Returns the raw text. */
 export async function recognizeImageText(pathOrUri: string): Promise<string> {
-  const result = await TextRecognition.recognize(toUri(pathOrUri));
+  const result = await withTimeout(
+    TextRecognition.recognize(toUri(pathOrUri)),
+    OCR_TIMEOUT_MS,
+    'Text recognition',
+  );
   return result.text ?? '';
 }
 
