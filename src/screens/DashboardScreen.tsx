@@ -10,11 +10,11 @@ import {
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
 import { useNavigation }            from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useColors, useSpacing, useTypography, useAssets } from '../../theme';
-import type { MainStackParamList }  from '../../navigation/types';
-import { Icon }                     from '../../components/Icon';
-import { AssetImage }               from '../../components/AssetImage';
-import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
+import { useColors, useSpacing, useTypography, useAssets } from '../theme';
+import type { MainStackParamList }  from '../navigation/types';
+import { Icon }                     from '../components/Icon';
+import { AssetImage }               from '../components/AssetImage';
+import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../components/BottomNavBar';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets }       from 'react-native-safe-area-context';
-import { TaxComplianceProps }      from '../../navigation/types';
-import { useColors, useSpacing, useTypography } from '../../theme';
-import { ScreenHeader }            from '../../components/ScreenHeader';
-import { InfoBanner }              from '../../components/InfoBanner';
-import { Badge }                   from '../../components/Badge';
-import { Icon, IconName }          from '../../components/Icon';
+import { TaxComplianceProps }      from '../navigation/types';
+import { useColors, useSpacing, useTypography } from '../theme';
+import { ScreenHeader }            from '../components/ScreenHeader';
+import { InfoBanner }              from '../components/InfoBanner';
+import { Badge }                   from '../components/Badge';
+import { Icon, IconName }          from '../components/Icon';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
