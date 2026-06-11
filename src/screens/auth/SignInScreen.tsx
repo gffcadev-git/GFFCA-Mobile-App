@@ -21,6 +21,12 @@ import { api, type ApiError }  from '../../apiCall';
 import { useAuthStore }        from '../../stores/authStore';
 import { biometricRefreshToken, hasBiometricLogin, disableBiometric } from '../../services/biometricCredentials';
 
+/** Tenants a user can sign in under. Value is sent to the API; label is shown. */
+const TENANTS = [
+  { code: 'gff', label: 'GFF' },
+  { code: 'nff', label: 'NFF' },
+] as const;
+
 export function SignInScreen({ navigation }: Readonly<SignInProps>) {
   const colors = useColors();
   const sp     = useSpacing();
@@ -30,6 +36,7 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
 
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [tenantCode, setTenantCode] = useState<string>('gff'); // GFF selected by default
   const [loading, setLoading]   = useState(false);
 
   const { methods, available } = useBiometrics();
@@ -53,6 +60,7 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
       const { accessToken, refreshToken, user } = await api.auth.login({
         email: email.trim(),
         password,
+        tenantCode,
       });
       await signIn({ token: accessToken, refreshToken, user });
     } catch (err) {
@@ -130,6 +138,36 @@ export function SignInScreen({ navigation }: Readonly<SignInProps>) {
 
         {/* Form */}
         <View style={styles.form}>
+          {/* Tenant code selector — GFF by default */}
+          <View style={styles.tenantWrap}>
+            <Text style={[styles.tenantLabel, { color: colors.text.secondary }]}>Tenant code</Text>
+            <View style={[styles.segmented, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
+              {TENANTS.map((t) => {
+                const selected = tenantCode === t.code;
+                return (
+                  <TouchableOpacity
+                    key={t.code}
+                    style={[styles.segment, selected && { backgroundColor: colors.primary.main }]}
+                    activeOpacity={0.8}
+                    onPress={() => setTenantCode(t.code)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                  >
+                    {selected && <Icon name="check" size={16} color={colors.primary.contrastText} />}
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        { color: selected ? colors.primary.contrastText : colors.text.secondary },
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
           <AppInput
             label="Email address"
             placeholder="james@acmesports.com"
@@ -232,6 +270,25 @@ function makeStyles(
     appName:      { fontSize: typo.fontSize.xxxl, fontWeight: typo.fontWeight.bold, letterSpacing: typo.letterSpacing.wide },
     tagline:      { fontSize: typo.fontSize.md, marginTop: sp.xxs + 2 },
     form:         { marginBottom: sp.xs },
+    tenantWrap:   { marginBottom: sp.md },
+    tenantLabel:  { fontSize: typo.fontSize.sm, fontWeight: typo.fontWeight.medium, marginBottom: sp.xs },
+    segmented: {
+      flexDirection: 'row',
+      borderWidth:   1,
+      borderRadius:  typo.borderRadius.md,
+      padding:       sp.xxs,
+      gap:           sp.xxs,
+    },
+    segment: {
+      flex:            1,
+      flexDirection:   'row',
+      alignItems:      'center',
+      justifyContent:  'center',
+      gap:             sp.xxs,
+      paddingVertical: sp.sm,
+      borderRadius:    typo.borderRadius.sm,
+    },
+    segmentText:  { fontSize: typo.fontSize.base, fontWeight: typo.fontWeight.semiBold },
     signInBtn:    { marginTop: sp.xs },
     dividerRow:   { flexDirection: 'row', alignItems: 'center', marginVertical: sp.lg },
     line:         { flex: 1, height: 1 },

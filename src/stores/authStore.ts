@@ -2,7 +2,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { zustandMMKVStorage } from '../services/storage';
 import { saveTokens, loadTokens, clearTokens } from '../services/secureTokens';
-import { disableBiometric } from '../services/biometricCredentials';
+
+/**
+ * A company the signed-in user is associated with, as returned inside the
+ * login response's `user.associatedCompanies`.
+ */
+export type AssociatedCompany = {
+  id: string;
+  name: string;
+  /** Relationship to the user, e.g. "parent". */
+  type: string;
+};
 
 /** Authenticated user as returned by the auth API. */
 export type AuthUser = {
@@ -12,6 +22,12 @@ export type AuthUser = {
   lastName: string;
   role: string;
   tenantCode: string;
+  /** The user's primary company. */
+  companyId: string;
+  /** Additional roles, or null when none. */
+  subRoles: string[] | null;
+  /** Companies the user can act for. Persisted to MMKV with the rest of `user`. */
+  associatedCompanies: AssociatedCompany[];
 };
 
 /** Session payload handed to {@link AuthState.signIn} after a successful login. */
@@ -29,14 +45,23 @@ type AuthState = {
    */
   token: string | null;
   refreshToken: string | null;
-  /** Non-secret profile — persisted to MMKV for instant render on launch. */
+  /**
+   * Non-secret profile — persisted to MMKV for instant render on launch.
+   * Includes `associatedCompanies` from the login response.
+   */
   user: AuthUser | null;
   isAuthenticated: boolean;
   /** False until secure tokens have been loaded on app start. */
   isHydrated: boolean;
 
   signIn: (session: AuthSession) => Promise<void>;
-  signOut: (opts?: { wipeBiometric?: boolean }) => Promise<void>;
+  /**
+   * Clear the in-memory + Keychain *session*. The biometric login credential
+   * is deliberately left intact — it's a separate Keychain entry and the whole
+   * point of biometric sign-in is to return after signing out. Turning it off
+   * is an explicit Profile toggle (see services/biometricCredentials).
+   */
+  signOut: () => Promise<void>;
   /** Update tokens after a refresh, keeping the Keychain in sync. */
   setTokens: (tokens: { token: string; refreshToken: string }) => Promise<void>;
   /** Load tokens from the secure store into memory on app launch. */
@@ -57,12 +82,8 @@ export const useAuthStore = create<AuthState>()(
         set({ token, refreshToken, user, isAuthenticated: true });
       },
 
-      signOut: async ({ wipeBiometric = false } = {}) => {
+      signOut: async () => {
         await clearTokens();
-        // Explicit user sign-out also removes the biometric-stored refresh token.
-        // The involuntary 401 path leaves it, so an expired access token alone
-        // doesn't disable the convenience login.
-        if (wipeBiometric) await disableBiometric();
         set({ token: null, refreshToken: null, user: null, isAuthenticated: false });
       },
 

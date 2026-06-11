@@ -136,9 +136,42 @@ export function isVinDisplayable(a: VinAnalysis): boolean {
   return a.lengthOk && a.invalidChars.length === 0;
 }
 
-/** Collect every distinct strict-form VIN in a block of OCR text. */
+/** Everything that can't be part of a VIN — stripped to fuse OCR-split reads. */
+const VIN_FUSE_REGEX = /[^A-Z0-9]/g;
+
+/**
+ * Collect candidate VINs from a block of OCR text, best first.
+ *
+ * Two passes, mirroring the container extractor's tolerance:
+ *  1. Clean contiguous matches in the raw text (fast path, no noise).
+ *  2. Fused-stream 17-char windows — handles OCR that splits the VIN with
+ *     stray spaces / line breaks ("1HGCM8 2633A0 04352"). A window is kept
+ *     only when displayable (17 legal chars), and checksum-valid reads are
+ *     ordered first so a genuine VIN wins over an accidental 17-char run.
+ *
+ * Without this second pass a VIN that doesn't OCR into one unbroken token
+ * never parses, so the auto-scan camera loops forever and the field stays
+ * empty — unlike container/seal, which already fuse before matching.
+ */
 export function extractVins(text: string): string[] {
-  return Array.from(
-    new Set([...text.matchAll(VIN_LOOSE)].map(m => m[0].toUpperCase())),
-  );
+  const upper = text.toUpperCase();
+
+  // Pass 1 — clean contiguous matches.
+  const clean = Array.from(new Set([...upper.matchAll(VIN_LOOSE)].map(m => m[0])));
+  if (clean.length > 0) return clean;
+
+  // Pass 2 — slide a 17-char window over the fused (separator-stripped) stream.
+  const fused = upper.replace(VIN_FUSE_REGEX, '');
+  const anchored: string[] = []; // checksum verifies — strongest signal
+  const fallback: string[] = []; // right shape, checksum not enforced/var
+  const seen = new Set<string>();
+  for (let i = 0; i + 17 <= fused.length; i++) {
+    const candidate = fused.slice(i, i + 17);
+    if (seen.has(candidate)) continue;
+    seen.add(candidate);
+    const a = analyzeVin(candidate);
+    if (!isVinDisplayable(a)) continue;
+    (a.checkDigitValid === true ? anchored : fallback).push(candidate);
+  }
+  return [...anchored, ...fallback];
 }

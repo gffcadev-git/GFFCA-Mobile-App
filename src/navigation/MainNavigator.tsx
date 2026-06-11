@@ -7,7 +7,9 @@ import { MessagesScreen }                 from '../screens/message/MessagesScree
 import { MessageThreadScreen }            from '../screens/message/MessageThreadScreen';
 import { ProfileScreen }                  from '../screens/profile/ProfileScreen';
 import { ShipmentsScreen }                from '../screens/shipmentInstructions/ShipmentsScreen';
-import { NotificationsScreen }            from '../screens/main/NotificationsScreen';
+import { NotificationsScreen }            from '../screens/notification/NotificationsScreen';
+import { MyProfileScreen }                from '../screens/profile/MyProfileScreen';
+import { ChangePasswordScreen }           from '../screens/profile/ChangePasswordScreen';
 import { CompanyDetailsScreen }           from '../screens/profile/CompanyDetailsScreen';
 import { SavedPartiesScreen }             from '../screens/profile/SavedPartiesScreen';
 import { TaxComplianceScreen }            from '../screens/TaxComplianceScreen';
@@ -62,6 +64,8 @@ export function MainNavigator() {
       <MainStack.Screen name="NewShippingSuccess" component={NewShippingSuccessScreen} />
       <MainStack.Screen name="MessageThread" component={MessageThreadScreen} />
       <MainStack.Screen name="Notifications" component={NotificationsScreen} />
+      <MainStack.Screen name="MyProfile" component={MyProfileScreen} />
+      <MainStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <MainStack.Screen name="CompanyDetails" component={CompanyDetailsScreen} />
       <MainStack.Screen name="SavedParties" component={SavedPartiesScreen} />
       <MainStack.Screen name="TaxCompliance" component={TaxComplianceScreen} />

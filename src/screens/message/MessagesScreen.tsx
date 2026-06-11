@@ -96,7 +96,7 @@ export function MessagesScreen() {
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       <TabHeader
         title="Messages"
-        avatarInitials="AE"
+        avatarInitials="none"
         onBellPress={() => navigation.navigate('Notifications')}
       />
 

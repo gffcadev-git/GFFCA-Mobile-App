@@ -12,6 +12,8 @@ export type IconName =
   | 'eye'
   | 'eye-off'
   | 'lock'
+  | 'lock-outline'
+  | 'email-outline'
   | 'fingerprint'
   | 'face-recognition'
   // States

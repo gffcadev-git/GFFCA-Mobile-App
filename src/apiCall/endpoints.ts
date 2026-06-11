@@ -30,6 +30,7 @@ export const ENDPOINTS = {
   },
   profile: {
     company:     '/company',
+    companyById: (id: string) => `/companies/${id}`,
     taxIds:      '/company/tax-ids',
     preferences: '/preferences',
   },

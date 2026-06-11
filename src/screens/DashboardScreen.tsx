@@ -9,12 +9,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets }        from 'react-native-safe-area-context';
 import { useNavigation }            from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp }   from '@react-navigation/bottom-tabs';
 import { useColors, useSpacing, useTypography, useAssets } from '../theme';
-import type { MainStackParamList }  from '../navigation/types';
+import type { MainStackParamList, MainTabParamList } from '../navigation/types';
 import { Icon }                     from '../components/Icon';
 import { AssetImage }               from '../components/AssetImage';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../components/BottomNavBar';
+import { TabHeader } from '../components/TabHeader';
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -88,7 +91,12 @@ function ProjectRow({ id, name, status, lastUpdate }: Readonly<{
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-type Nav = NativeStackNavigationProp<MainStackParamList>;
+// Dashboard lives in the tab navigator nested inside the main stack, so its
+// navigation can reach both tab routes (Profile) and stack routes (Notifications).
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList>,
+  NativeStackNavigationProp<MainStackParamList>
+>;
 
 export function DashboardScreen() {
   const colors     = useColors();
@@ -117,23 +125,13 @@ export function DashboardScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + sp.xs }]}>
-        <AssetImage
-          uri={assets.logo}
-          style={styles.headerLogo}
-          resizeMode="contain"
-          fallback={<Text style={[styles.headerAppName, { color: colors.text.primary }]}>GFF Portal</Text>}
-        />
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
-            <Icon name="bell-outline" size={24} color={colors.text.primary} />
-          </TouchableOpacity>
-          <View style={[styles.avatar, { backgroundColor: colors.primary.main }]}>
-            <Text style={[styles.avatarText, { color: colors.primary.contrastText }]}>J</Text>
-          </View>
-        </View>
-      </View>
-
+      
+      <TabHeader
+        title="Messages"
+        avatarInitials='none'
+        onBellPress={() => navigation.navigate('Notifications')}
+      />
+       
       <ScrollView
         contentContainerStyle={[
           styles.scroll,

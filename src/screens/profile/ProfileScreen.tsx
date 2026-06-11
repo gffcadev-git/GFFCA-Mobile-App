@@ -13,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors, useSpacing, useTypography } from '../../theme';
 import type { MainStackParamList }        from '../../navigation/types';
 import { Avatar }                         from '../../components/Avatar';
+import { Icon }                           from '../../components/Icon';
 import { SettingsRow }                    from '../../components/SettingsRow';
 import { TabHeader }                      from '../../components/TabHeader';
 import { BottomNavBar, BOTTOM_NAV_HEIGHT } from '../../components/BottomNavBar';
@@ -27,6 +28,17 @@ import { queryClient, queryPersister }     from '../../services/queryClient';
 
 type Nav = NativeStackNavigationProp<MainStackParamList>;
 
+/** "Global Shipping Corp" → "GS". */
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '—';
+}
+
+/** "customer" → "Customer". */
+function titleCase(s?: string | null): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : '';
+}
+
 export function ProfileScreen() {
   const colors     = useColors();
   const sp         = useSpacing();
@@ -38,6 +50,13 @@ export function ProfileScreen() {
   const { methods, authenticate } = useBiometrics();
   const refreshToken              = useAuthStore(s => s.refreshToken);
   const signOut                   = useAuthStore(s => s.signOut);
+  const user                      = useAuthStore(s => s.user);
+
+  const companyName = user?.associatedCompanies?.[0]?.name ?? 'My company';
+  const personLine  = [
+    [user?.firstName, user?.lastName].filter(Boolean).join(' '),
+    titleCase(user?.role),
+  ].filter(Boolean).join(' · ');
 
   // Single source of truth: whether a biometric login credential is enrolled in
   // the Keychain. Both platform rows (Face ID / fingerprint) reflect this one
@@ -73,15 +92,22 @@ export function ProfileScreen() {
     }
   }
 
-  // Full sign-out: best-effort server revoke, then wipe every local trace —
-  // session + biometric tokens, saved drafts, and the cached API data.
+  // Sign-out: end the session and wipe local app data. The biometric login is
+  // preserved on purpose so the user can sign back in with their face/finger —
+  // disabling it is the separate toggle above.
   async function handleSignOut() {
-    try {
-      await api.auth.logout();              // revoke server-side; ignore offline / already-expired
-    } catch {
-      // best-effort — proceed with local teardown regardless
+    // Only revoke server-side when there's no biometric login to keep alive.
+    // Biometric sign-in re-uses this exact refresh token to mint fresh access
+    // tokens, so revoking it here would make the next Face ID / fingerprint
+    // login fail. With biometric off, the access token just expires on its own.
+    if (!bioEnabled) {
+      try {
+        await api.auth.logout();            // revoke server-side; ignore offline / already-expired
+      } catch {
+        // best-effort — proceed with local teardown regardless
+      }
     }
-    await signOut({ wipeBiometric: true }); // clears Keychain session + biometric tokens, flips auth state
+    await signOut();                        // clear Keychain session + flip auth state (keeps biometric entry)
     useDraftStore.getState().clear();       // drop saved shipping drafts (gffca-drafts)
     queryClient.clear();                    // drop in-memory React Query cache
     await queryPersister.removeClient();    // drop persisted cache (gffca-react-query-cache)
@@ -98,7 +124,7 @@ export function ProfileScreen() {
     <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       <TabHeader
         title="Company profile"
-        avatarInitials="AE"
+        avatarInitials="none"
         onBellPress={() => navigation.navigate('Notifications')}
       />
 
@@ -109,14 +135,21 @@ export function ProfileScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile card */}
-        <View style={[styles.profileCard, { backgroundColor: colors.background.paper, borderColor: colors.border }]}>
-          <Avatar initials="AE" size={56} />
+        {/* Profile card — opens the editable My Profile screen */}
+        <TouchableOpacity
+          style={[styles.profileCard, { backgroundColor: colors.background.paper, borderColor: colors.border }]}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('MyProfile')}
+        >
+          <Avatar initials={initialsOf(companyName)} size={56} />
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text.primary }]}>Acme Exports Inc.</Text>
-            <Text style={[styles.profileRole, { color: colors.text.secondary }]}>James O. · Operations</Text>
+            <Text style={[styles.profileName, { color: colors.text.primary }]} numberOfLines={1}>{companyName}</Text>
+            {!!personLine && (
+              <Text style={[styles.profileRole, { color: colors.text.secondary }]} numberOfLines={1}>{personLine}</Text>
+            )}
           </View>
-        </View>
+          <Icon name="chevron-right" size={22} color={colors.text.secondary} />
+        </TouchableOpacity>
 
         {/* Shipping group */}
         <Text style={[styles.sectionHeading, { color: colors.text.secondary }]}>SHIPPING</Text>

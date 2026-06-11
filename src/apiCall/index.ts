@@ -30,4 +30,4 @@ export type { AuthUser, AuthSession } from '../stores/authStore';
 export type { NotificationDTO } from './notifications.api';
 export type { PartyDTO, PartyType } from './parties.api';
 export type { ConversationDTO, MessageDTO } from './messages.api';
-export type { CompanyDTO, TaxIdDTO, PreferencesPayload } from './profile.api';
+export type { CompanyDTO, CompanyDetailDTO, CompanyContactDTO, TaxIdDTO, PreferencesPayload } from './profile.api';

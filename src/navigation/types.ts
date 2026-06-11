@@ -45,6 +45,8 @@ export type MainStackParamList = {
   NewShippingSuccess:   undefined;
   MessageThread:        { ref: string; subtitle: string };
   Notifications:        undefined;
+  MyProfile:            undefined;
+  ChangePassword:       undefined;
   CompanyDetails:       undefined;
   SavedParties:         undefined;
   TaxCompliance:        undefined;
@@ -65,6 +67,8 @@ export type NewShippingStep6Props = NativeStackScreenProps<MainStackParamList, '
 export type NewShippingSuccessProps = NativeStackScreenProps<MainStackParamList, 'NewShippingSuccess'>;
 export type MessageThreadProps      = NativeStackScreenProps<MainStackParamList, 'MessageThread'>;
 export type NotificationsProps      = NativeStackScreenProps<MainStackParamList, 'Notifications'>;
+export type MyProfileProps          = NativeStackScreenProps<MainStackParamList, 'MyProfile'>;
+export type ChangePasswordProps     = NativeStackScreenProps<MainStackParamList, 'ChangePassword'>;
 export type CompanyDetailsProps     = NativeStackScreenProps<MainStackParamList, 'CompanyDetails'>;
 export type SavedPartiesProps       = NativeStackScreenProps<MainStackParamList, 'SavedParties'>;
 export type TaxComplianceProps      = NativeStackScreenProps<MainStackParamList, 'TaxCompliance'>;
