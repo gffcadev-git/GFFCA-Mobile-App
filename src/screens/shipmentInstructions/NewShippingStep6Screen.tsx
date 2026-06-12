@@ -1,5 +1,11 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { NewShippingStep6Props }      from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -99,7 +105,8 @@ export function NewShippingStep6Screen({ navigation }: Readonly<NewShippingStep6
       {/* Step progress */}
       <StepProgress steps={STEPS} currentStep={6} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -147,7 +154,7 @@ export function NewShippingStep6Screen({ navigation }: Readonly<NewShippingStep6
             { label: 'Bill',      value: 'Bill of lading' },
           ]}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — Back + Submit */}
       <WizardFooter>

@@ -1,12 +1,10 @@
 import React from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { NewShippingStep3Props }      from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -55,10 +53,7 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: colors.background.default }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <ScreenHeader
         title={form.ref ?? 'New shipping instruction'}
@@ -70,7 +65,8 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
       {/* Step progress */}
       <StepProgress steps={STEPS} currentStep={3} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -135,7 +131,7 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
           value={form.shipperAddress}
           onChangeText={t => setForm({ shipperAddress: t })}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — Back + Next */}
       <WizardFooter>
@@ -152,7 +148,7 @@ export function NewShippingStep3Screen({ navigation }: Readonly<NewShippingStep3
           style={styles.nextBtn}
         />
       </WizardFooter>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

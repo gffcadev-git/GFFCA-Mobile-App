@@ -1,13 +1,11 @@
 import React from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }              from 'react-native-safe-area-context';
 import { NewShippingCargoVehiclesProps }  from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -130,10 +128,7 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
   const allHaveVin = vehicles.every(v => isVinDisplayable(analyzeVin(v.vin)));
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: colors.background.default }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header */}
       <ScreenHeader
         title={siRef ?? 'New shipping instruction'}
@@ -145,7 +140,8 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
       {/* Step progress */}
       <StepProgress steps={STEPS} currentStep={4} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -190,7 +186,7 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
           <Icon name="plus" size={18} color={colors.text.link} />
           <Text style={[styles.addText, { color: colors.text.link }]}>Add another vehicle</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — Back + Run checks */}
       <WizardFooter>
@@ -208,7 +204,7 @@ export function NewShippingCargoVehiclesScreen({ navigation }: Readonly<NewShipp
           style={styles.nextBtn}
         />
       </WizardFooter>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

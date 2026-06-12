@@ -1,5 +1,10 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { NewShippingSuccessProps }    from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -40,7 +45,8 @@ export function NewShippingSuccessScreen({ navigation }: Readonly<NewShippingSuc
         <Text style={[styles.topTitle, { color: colors.text.primary }]}>Shipping instruction</Text>
       </View>
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -90,7 +96,7 @@ export function NewShippingSuccessScreen({ navigation }: Readonly<NewShippingSuc
             </Text>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — View shipment + Done */}
       <WizardFooter>

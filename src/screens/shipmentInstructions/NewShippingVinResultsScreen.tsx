@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }            from 'react-native-safe-area-context';
 import { NewShippingVinResultsProps }   from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -155,7 +160,8 @@ export function NewShippingVinResultsScreen({ navigation }: Readonly<NewShipping
       {/* Step progress */}
       <StepProgress steps={STEPS} currentStep={4} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -171,7 +177,7 @@ export function NewShippingVinResultsScreen({ navigation }: Readonly<NewShipping
         {vehicles.map((v, i) => (
           <VehicleResultCard key={v.id} index={i} vin={v.vin} />
         ))}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — Edit + Notify party */}
       <WizardFooter>

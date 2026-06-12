@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets }          from 'react-native-safe-area-context';
 import { NewShippingStep1Props }      from '../../navigation/types';
 import { useColors, useSpacing, useTypography } from '../../theme';
@@ -54,10 +52,7 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { backgroundColor: colors.background.default }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background.default }]}>
       {/* Header — show the SI id when resuming a draft, else the create title. */}
       <ScreenHeader
         title={route.params?.ref ?? 'New shipping instruction'}
@@ -69,7 +64,8 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
       {/* Step progress */}
       <StepProgress steps={STEPS} currentStep={1} />
 
-      <ScrollView
+      <KeyboardAwareScrollView
+        bottomOffset={24}
         contentContainerStyle={[
           styles.scroll,
           { paddingBottom: insets.bottom + sp.xxl + sp.buttonHeight },
@@ -124,7 +120,7 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
           onChangeText={t => setForm({ destination: t })}
           helperText="City and country of final delivery."
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Fixed bottom — Next button */}
       <WizardFooter>
@@ -135,7 +131,7 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
           style={styles.fullBtn}
         />
       </WizardFooter>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
