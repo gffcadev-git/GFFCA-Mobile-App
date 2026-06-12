@@ -25,6 +25,16 @@ export type ShippingInstructionDTO = {
   cargoLines?: Array<{ description?: string }>;
 };
 
+/**
+ * Body for creating a new shipping instruction (POST /shipping-instructions).
+ * Only `companyId` is required — the backend creates an empty draft SI and
+ * returns its id. The rest of the form (booking, destination, parties, cargo…)
+ * is collected through the wizard and sent later via the update/submit call.
+ */
+export type CreateShippingInstructionPayload = {
+  companyId: string;
+};
+
 /** Backend status string → the app's {@link ShipmentStatus}. */
 const STATUS_MAP: Record<string, ShipmentStatus> = {
   draft:            'Draft',
@@ -81,7 +91,7 @@ export const shipmentsApi = {
     return mapShippingInstruction(res.data.data);
   },
 
-  create: async (payload: Partial<Shipment>): Promise<Shipment> => {
+  create: async (payload: CreateShippingInstructionPayload): Promise<Shipment> => {
     const res = await httpClient.post<ApiEnvelope<ShippingInstructionDTO>>(ENDPOINTS.shipments.create, payload);
     return mapShippingInstruction(res.data.data);
   },

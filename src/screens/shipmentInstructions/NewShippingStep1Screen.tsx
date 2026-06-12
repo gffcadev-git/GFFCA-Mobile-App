@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  Alert,
   StyleSheet,
   Text,
   View,
@@ -16,8 +17,10 @@ import { SaveDraftButton }            from '../../components/SaveDraftButton';
 import { InfoBanner }                 from '../../components/InfoBanner';
 import { WizardFooter }               from '../../components/WizardFooter';
 import { Icon }                       from '../../components/Icon';
-import { useShipmentDetail }          from '../../hooks/useShipments';
+import { useShipmentDetail, useCreateShipment } from '../../hooks/useShipments';
 import { useSiDraftStore }            from '../../stores/siDraftStore';
+import { useAuthStore }               from '../../stores/authStore';
+import type { ApiError }              from '../../apiCall';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -38,6 +41,13 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
   const hydrate = useSiDraftStore(s => s.hydrate);
   const reset   = useSiDraftStore(s => s.reset);
 
+  // companyId is mandatory to create an SI; it comes from the signed-in user
+  // (persisted to MMKV by the auth store).
+  const companyId = useAuthStore(s => s.user?.companyId);
+
+  // Creates the draft SI up-front so later steps have an id to update/submit.
+  const createShipment = useCreateShipment();
+
   // Start each flow from a clean form; resuming hydrates once the SI loads.
   useEffect(() => { reset(); }, [reset]);
   useEffect(() => { if (draft) hydrate(draft); }, [draft, hydrate]);
@@ -47,8 +57,32 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
 
   const styles = makeStyles(sp, typo);
 
-  function handleNext() {
-    navigation.navigate('NewShippingStep2');
+  async function handleNext() {
+    // Resuming an existing SI → it's already created; just move on. The booking
+    // and destination edits already live in the shared draft store.
+    if (form.id) {
+      navigation.navigate('NewShippingStep2');
+      return;
+    }
+
+    if (!companyId) {
+      Alert.alert(
+        'Company missing',
+        'We couldn’t find your company on this account. Please sign in again before creating a shipping instruction.',
+      );
+      return;
+    }
+
+    try {
+      // Create an empty draft SI (companyId is the only required field). Booking
+      // and destination stay in the draft store and are submitted on Step 6.
+      const created = await createShipment.mutateAsync({ companyId });
+      setForm({ id: created.id, ref: created.ref });
+      navigation.navigate('NewShippingStep2');
+    } catch (err) {
+      const message = (err as ApiError)?.message ?? 'Unable to create the shipping instruction. Please try again.';
+      Alert.alert('Could not create SI', message);
+    }
   }
 
   return (
@@ -127,7 +161,8 @@ export function NewShippingStep1Screen({ navigation, route }: Readonly<NewShippi
         <AppButton
           title="Next →"
           onPress={handleNext}
-          disabled={!form.destination.trim()}
+          loading={createShipment.isPending}
+          disabled={!form.destination.trim() || createShipment.isPending}
           style={styles.fullBtn}
         />
       </WizardFooter>
